@@ -9,6 +9,8 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">　　　　　
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <!-- 不指定 charset，使用系统默认编码（Windows=GBK，Linux/Mac=UTF-8）-->
+            <!-- 如果要在 Windows PowerShell 中正常显示中文，不加 charset 让 logback 自动用 GBK -->
         </encoder>
     </appender>
 

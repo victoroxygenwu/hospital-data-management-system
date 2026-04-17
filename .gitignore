@@ -19,6 +19,40 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# virtual machine crash logs, see http://www.java.com/en/download/help_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# =============================================
+# 医院项目 - 不用的数据库 SQL 目录（仅用 OpenGauss）
+# =============================================
+sql/dm/
+sql/oracle/
+sql/postgresql/
+sql/sqlserver/
+sql/kingbase/
+sql/db2/
+sql/tools/
+
+# IDE
+.idea/
+*.iml
+
+# Maven build output
+ruoyi-vue-pro/target/
+target/
+.m2/repository/
+
+# =============================================
+# 开发测试文件（本地使用，不进版本控制）
+# =============================================
+test_hospital_api.js
+test_api.ps1
+test_debug.js
+fix_seqs.sql
+fix_bed_status.sql
+check_seqs.sql
+check_state.sql
+check_visit_date.sql
+cleanup_menus.sql
+test_direct_insert.sql
