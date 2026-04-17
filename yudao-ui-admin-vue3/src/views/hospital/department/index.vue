@@ -3,10 +3,10 @@
     <!-- 搜索栏 -->
     <el-form :inline="true" :model="queryParams" class="mb-15px">
       <el-form-item label="科室名称">
-        <el-input v-model="queryParams.name" placeholder="请输入科室名称" clearable @keyup.enter="handleQuery" />
+        <el-input v-model="queryParams.deptName" placeholder="请输入科室名称" clearable @keyup.enter="handleQuery" />
       </el-form-item>
-      <el-form-item label="科室编码">
-        <el-input v-model="queryParams.code" placeholder="请输入科室编码" clearable @keyup.enter="handleQuery" />
+      <el-form-item label="联系电话">
+        <el-input v-model="queryParams.phone" placeholder="请输入联系电话" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleQuery"><Icon icon="ep:search" class="mr-5px" />搜索</el-button>
@@ -22,8 +22,10 @@
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column label="ID" prop="id" width="80" />
-      <el-table-column label="科室名称" prop="name" width="150" />
-      <el-table-column label="科室编码" prop="code" width="120" />
+      <el-table-column label="科室名称" prop="deptName" width="150" />
+      <el-table-column label="联系电话" prop="phone" width="130" />
+      <el-table-column label="科室主任" prop="manager" width="100" />
+      <el-table-column label="科室位置" prop="location" width="150" />
       <el-table-column label="描述" prop="description" min-width="200" show-overflow-tooltip />
       <el-table-column label="创建时间" prop="createTime" width="180" />
       <el-table-column label="操作" width="180" fixed="right">
@@ -43,10 +45,16 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="科室名称" required>
-          <el-input v-model="formData.name" placeholder="请输入科室名称" />
+          <el-input v-model="formData.deptName" placeholder="请输入科室名称" />
         </el-form-item>
-        <el-form-item label="科室编码" required>
-          <el-input v-model="formData.code" placeholder="请输入科室编码" />
+        <el-form-item label="联系电话">
+          <el-input v-model="formData.phone" placeholder="请输入联系电话" />
+        </el-form-item>
+        <el-form-item label="科室主任">
+          <el-input v-model="formData.manager" placeholder="请输入科室主任" />
+        </el-form-item>
+        <el-form-item label="科室位置">
+          <el-input v-model="formData.location" placeholder="请输入科室位置" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入描述" />
@@ -70,11 +78,11 @@ defineOptions({ name: 'HospitalDepartment' })
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
-const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, code: undefined })
+const queryParams = reactive({ pageNo: 1, pageSize: 10, deptName: undefined, phone: undefined })
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
-const formData = reactive({ id: undefined, name: '', code: '', description: '' })
+const formData = reactive({ id: undefined as any, deptName: '', phone: '', manager: '', location: '', description: '' })
 
 const getList = async () => {
   loading.value = true
@@ -88,7 +96,7 @@ const getList = async () => {
 }
 
 const handleQuery = () => { queryParams.pageNo = 1; getList() }
-const resetQuery = () => { queryParams.name = undefined; queryParams.code = undefined; handleQuery() }
+const resetQuery = () => { queryParams.deptName = undefined; queryParams.phone = undefined; handleQuery() }
 
 const openForm = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增科室' : '编辑科室'
@@ -96,14 +104,13 @@ const openForm = async (type: string, id?: number) => {
     const res = await getDepartment(id)
     Object.assign(formData, res)
   } else {
-    Object.assign(formData, { id: undefined, name: '', code: '', description: '' })
+    Object.assign(formData, { id: undefined, deptName: '', phone: '', manager: '', location: '', description: '' })
   }
   dialogVisible.value = true
 }
 
 const submitForm = async () => {
-  if (!formData.name) { ElMessage.warning('请输入科室名称'); return }
-  if (!formData.code) { ElMessage.warning('请输入科室编码'); return }
+  if (!formData.deptName) { ElMessage.warning('请输入科室名称'); return }
   submitting.value = true
   try {
     if (formData.id) { await updateDepartment(formData as any) } else { await createDepartment(formData as any) }

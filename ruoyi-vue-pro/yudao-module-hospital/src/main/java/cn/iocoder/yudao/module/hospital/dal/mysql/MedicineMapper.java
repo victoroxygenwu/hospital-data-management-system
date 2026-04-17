@@ -13,7 +13,7 @@ public interface MedicineMapper extends BaseMapperX<MedicineDO> {
     default PageResult<MedicineDO> selectPage(MedicinePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<MedicineDO>()
                 .likeIfPresent(MedicineDO::getName, reqVO.getName())
-                .eqIfPresent(MedicineDO::getManufacturer, reqVO.getManufacturer())
+                .likeIfPresent(MedicineDO::getManufacturer, reqVO.getManufacturer())
                 .orderByDesc(MedicineDO::getId));
     }
 

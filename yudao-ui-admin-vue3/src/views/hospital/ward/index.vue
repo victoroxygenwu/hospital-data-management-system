@@ -1,12 +1,17 @@
 <template>
   <div class="p-20px">
     <el-form :inline="true" :model="queryParams" class="mb-15px">
-      <el-form-item label="病房名称">
-        <el-input v-model="queryParams.name" placeholder="请输入病房名称" clearable @keyup.enter="handleQuery" />
+      <el-form-item label="病房编号">
+        <el-input v-model="queryParams.wardNo" placeholder="请输入病房编号" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item label="科室">
         <el-select v-model="queryParams.deptId" placeholder="全部科室" clearable filterable>
-          <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.name" :value="dept.id" />
+          <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.deptName" :value="dept.id" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="病房类型">
+        <el-select v-model="queryParams.type" placeholder="全部类型" clearable>
+          <el-option v-for="opt in getIntDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -24,11 +29,20 @@
       <el-table-column label="科室" width="120">
         <template #default="{ row }">{{ getDeptName(row.deptId) }}</template>
       </el-table-column>
-      <el-table-column label="病房名称" prop="name" width="150" />
+      <el-table-column label="病房编号" prop="wardNo" width="120" />
       <el-table-column label="病房类型" width="100">
-        <template #default="{ row }">{{ getDictLabel('hospital_ward_type', row.wardType) }}</template>
+        <template #default="{ row }">{{ getDictLabel('hospital_ward_type', row.type) }}</template>
       </el-table-column>
-      <el-table-column label="楼层" prop="floor" width="80" />
+      <el-table-column label="总床位" prop="capacity" width="80" />
+      <el-table-column label="已用" prop="usedBeds" width="80" />
+      <el-table-column label="病房状态" width="100">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 0 ? 'success' : row.status === 1 ? 'warning' : 'info'">
+            {{ row.status === 0 ? '正常' : row.status === 1 ? '已满' : '维修中' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="描述" prop="description" min-width="150" show-overflow-tooltip />
       <el-table-column label="创建时间" prop="createTime" width="180" />
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
@@ -46,16 +60,17 @@
       <el-form :model="formData" label-width="100px">
         <el-form-item label="科室" required>
           <el-select v-model="formData.deptId" placeholder="请选择科室" filterable style="width:100%;">
-            <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.name" :value="dept.id" />
+            <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.deptName" :value="dept.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="病房名称" required><el-input v-model="formData.name" placeholder="请输入病房名称" /></el-form-item>
+        <el-form-item label="病房编号" required><el-input v-model="formData.wardNo" placeholder="如: A-101" /></el-form-item>
         <el-form-item label="病房类型">
-          <el-select v-model="formData.wardType" placeholder="请选择病房类型" style="width:100%;">
+          <el-select v-model="formData.type" placeholder="请选择病房类型" style="width:100%;">
             <el-option v-for="opt in getIntDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="楼层"><el-input-number v-model="formData.floor" :min="1" /></el-form-item>
+        <el-form-item label="总床位数"><el-input-number v-model="formData.capacity" :min="1" style="width:100%;" /></el-form-item>
+        <el-form-item label="描述"><el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入描述" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -75,23 +90,23 @@ import { getIntDictOptions, getDictLabel } from '@/utils/hospitalDict'
 defineOptions({ name: 'HospitalWard' })
 
 // 科室下拉
-const deptOptions = ref<{ id: number; name: string }[]>([])
+const deptOptions = ref<{ id: number; deptName: string }[]>([])
 const loadDepts = async () => {
   try {
     const res = await getDepartmentPage({ pageNo: 1, pageSize: 200 })
-    deptOptions.value = (res.list || []).map((d: any) => ({ id: d.id, name: d.name }))
+    deptOptions.value = (res.list || []).map((d: any) => ({ id: d.id, deptName: d.deptName }))
   } catch { /* ignore */ }
 }
-const getDeptName = (deptId: number) => deptOptions.value.find(d => d.id === deptId)?.name || String(deptId || '')
+const getDeptName = (deptId: number) => deptOptions.value.find(d => d.id === deptId)?.deptName || String(deptId || '')
 
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
-const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, deptId: undefined })
+const queryParams = reactive({ pageNo: 1, pageSize: 10, wardNo: undefined, deptId: undefined, type: undefined })
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
-const formData = reactive({ id: undefined as any, deptId: undefined as any, name: '', wardType: undefined as any, floor: 1 })
+const formData = reactive({ id: undefined as any, deptId: undefined as any, wardNo: '', type: undefined as any, capacity: 1, description: '' })
 
 const getList = async () => {
   loading.value = true
@@ -103,7 +118,7 @@ const getList = async () => {
 }
 
 const handleQuery = () => { queryParams.pageNo = 1; getList() }
-const resetQuery = () => { queryParams.name = undefined; queryParams.deptId = undefined; handleQuery() }
+const resetQuery = () => { queryParams.wardNo = undefined; queryParams.deptId = undefined; queryParams.type = undefined; handleQuery() }
 
 const openForm = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增病房' : '编辑病房'
@@ -111,13 +126,13 @@ const openForm = async (type: string, id?: number) => {
     const res = await getWard(id)
     Object.assign(formData, res)
   } else {
-    Object.assign(formData, { id: undefined, deptId: undefined, name: '', wardType: undefined, floor: 1 })
+    Object.assign(formData, { id: undefined, deptId: undefined, wardNo: '', type: undefined, capacity: 1, description: '' })
   }
   dialogVisible.value = true
 }
 
 const submitForm = async () => {
-  if (!formData.name) { ElMessage.warning('请输入病房名称'); return }
+  if (!formData.wardNo) { ElMessage.warning('请输入病房编号'); return }
   submitting.value = true
   try {
     if (formData.id) { await updateWard(formData as any) } else { await createWard(formData as any) }

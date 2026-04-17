@@ -1,11 +1,14 @@
 <template>
   <div class="p-20px">
     <el-form :inline="true" :model="queryParams" class="mb-15px">
-      <el-form-item label="姓名">
+      <el-form-item label="患者姓名">
         <el-input v-model="queryParams.name" placeholder="请输入患者姓名" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item label="手机号">
         <el-input v-model="queryParams.phone" placeholder="请输入手机号" clearable @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item label="身份证号">
+        <el-input v-model="queryParams.idCard" placeholder="请输入身份证号" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleQuery"><Icon icon="ep:search" class="mr-5px" />搜索</el-button>
@@ -26,6 +29,7 @@
       <el-table-column label="出生日期" prop="birthDate" width="120" />
       <el-table-column label="手机号" prop="phone" width="130" />
       <el-table-column label="身份证号" prop="idCard" width="180" />
+      <el-table-column label="医保卡号" prop="insuranceNo" width="150" />
       <el-table-column label="创建时间" prop="createTime" width="180" />
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
@@ -39,7 +43,7 @@
       :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
       @size-change="getList" @current-change="getList" />
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="姓名" required><el-input v-model="formData.name" placeholder="请输入姓名" /></el-form-item>
         <el-form-item label="性别">
@@ -47,10 +51,14 @@
             <el-option v-for="opt in getIntDictOptions('hospital_patient_gender')" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="出生日期"><el-date-picker v-model="formData.birthDate" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+        <el-form-item label="出生日期"><el-date-picker v-model="formData.birthDate" type="date" value-format="YYYY-MM-DD" style="width:100%;" /></el-form-item>
         <el-form-item label="手机号"><el-input v-model="formData.phone" placeholder="请输入手机号" /></el-form-item>
         <el-form-item label="身份证号"><el-input v-model="formData.idCard" placeholder="请输入身份证号" /></el-form-item>
         <el-form-item label="地址"><el-input v-model="formData.address" placeholder="请输入地址" /></el-form-item>
+        <el-form-item label="紧急联系人"><el-input v-model="formData.emergencyContact" placeholder="请输入紧急联系人姓名" /></el-form-item>
+        <el-form-item label="紧急电话"><el-input v-model="formData.emergencyPhone" placeholder="请输入紧急联系人电话" /></el-form-item>
+        <el-form-item label="医保卡号"><el-input v-model="formData.insuranceNo" placeholder="请输入医保卡号" /></el-form-item>
+        <el-form-item label="既往病史"><el-input v-model="formData.medicalHistory" type="textarea" :rows="2" placeholder="请输入既往病史" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -71,11 +79,14 @@ defineOptions({ name: 'HospitalPatient' })
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
-const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, phone: undefined })
+const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, phone: undefined, idCard: undefined })
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
-const formData = reactive({ id: undefined as any, name: '', gender: 1, birthDate: '', phone: '', idCard: '', address: '' })
+const formData = reactive({
+  id: undefined as any, name: '', gender: 1, birthDate: '', phone: '', idCard: '',
+  address: '', emergencyContact: '', emergencyPhone: '', insuranceNo: '', medicalHistory: ''
+})
 
 const getList = async () => {
   loading.value = true
@@ -87,7 +98,7 @@ const getList = async () => {
 }
 
 const handleQuery = () => { queryParams.pageNo = 1; getList() }
-const resetQuery = () => { queryParams.name = undefined; queryParams.phone = undefined; handleQuery() }
+const resetQuery = () => { queryParams.name = undefined; queryParams.phone = undefined; queryParams.idCard = undefined; handleQuery() }
 
 const openForm = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增病人' : '编辑病人'
@@ -95,7 +106,7 @@ const openForm = async (type: string, id?: number) => {
     const res = await getPatient(id)
     Object.assign(formData, res)
   } else {
-    Object.assign(formData, { id: undefined, name: '', gender: 1, birthDate: '', phone: '', idCard: '', address: '' })
+    Object.assign(formData, { id: undefined, name: '', gender: 1, birthDate: '', phone: '', idCard: '', address: '', emergencyContact: '', emergencyPhone: '', insuranceNo: '', medicalHistory: '' })
   }
   dialogVisible.value = true
 }

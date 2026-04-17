@@ -6,7 +6,12 @@
       </el-form-item>
       <el-form-item label="科室">
         <el-select v-model="queryParams.deptId" placeholder="全部科室" clearable filterable>
-          <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.name" :value="dept.id" />
+          <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.deptName" :value="dept.id" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="职称">
+        <el-select v-model="queryParams.title" placeholder="全部职称" clearable>
+          <el-option v-for="opt in getIntDictOptions('hospital_doctor_title')" :key="opt.value" :label="opt.label" :value="opt.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -21,21 +26,18 @@
 
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column label="ID" prop="id" width="80" />
-      <el-table-column label="姓名" prop="name" width="120" />
+      <el-table-column label="姓名" prop="name" width="100" />
       <el-table-column label="科室" width="120">
         <template #default="{ row }">{{ getDeptName(row.deptId) }}</template>
       </el-table-column>
       <el-table-column label="职称" width="120">
-        <template #default="{ row }">{{ getDictLabel('hospital_doctor_title', row.status) }}</template>
+        <template #default="{ row }">{{ getDictLabel('hospital_doctor_title', row.title) }}</template>
       </el-table-column>
+      <el-table-column label="性别" width="60">
+        <template #default="{ row }">{{ getDictLabel('hospital_patient_gender', row.gender) }}</template>
+      </el-table-column>
+      <el-table-column label="年龄" prop="age" width="60" />
       <el-table-column label="电话" prop="phone" width="130" />
-      <el-table-column label="状态" width="80">
-        <template #default="{ row }">
-          <el-tag :type="getDictColorType('hospital_doctor_status', row.status)">
-            {{ getDictLabel('hospital_doctor_status', row.status) }}
-          </el-tag>
-        </template>
-      </el-table-column>
       <el-table-column label="创建时间" prop="createTime" width="180" />
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
@@ -49,25 +51,27 @@
       :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
       @size-change="getList" @current-change="getList" />
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="姓名" required><el-input v-model="formData.name" placeholder="请输入姓名" /></el-form-item>
         <el-form-item label="科室" required>
           <el-select v-model="formData.deptId" placeholder="请选择科室" filterable style="width:100%;">
-            <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.name" :value="dept.id" />
+            <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.deptName" :value="dept.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="性别">
+          <el-select v-model="formData.gender" style="width:100%;">
+            <el-option v-for="opt in getIntDictOptions('hospital_patient_gender')" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="年龄"><el-input-number v-model="formData.age" :min="0" style="width:100%;" /></el-form-item>
         <el-form-item label="职称">
           <el-select v-model="formData.title" placeholder="请选择职称" style="width:100%;">
             <el-option v-for="opt in getIntDictOptions('hospital_doctor_title')" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="电话"><el-input v-model="formData.phone" placeholder="请输入电话" /></el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="formData.status" style="width:100%;">
-            <el-option v-for="opt in getIntDictOptions('hospital_doctor_status')" :key="opt.value" :label="opt.label" :value="opt.value" />
-          </el-select>
-        </el-form-item>
+        <el-form-item label="邮箱"><el-input v-model="formData.email" placeholder="请输入邮箱" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -82,28 +86,28 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDoctorPage, getDoctor, createDoctor, updateDoctor, deleteDoctor } from '@/api/hospital/doctor'
 import { getDepartmentPage } from '@/api/hospital/department'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getIntDictOptions, getDictLabel } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalDoctor' })
 
 // 科室下拉
-const deptOptions = ref<{ id: number; name: string }[]>([])
+const deptOptions = ref<{ id: number; deptName: string }[]>([])
 const loadDepts = async () => {
   try {
     const res = await getDepartmentPage({ pageNo: 1, pageSize: 200 })
-    deptOptions.value = (res.list || []).map((d: any) => ({ id: d.id, name: d.name }))
+    deptOptions.value = (res.list || []).map((d: any) => ({ id: d.id, deptName: d.deptName }))
   } catch { /* ignore */ }
 }
-const getDeptName = (deptId: number) => deptOptions.value.find(d => d.id === deptId)?.name || String(deptId || '')
+const getDeptName = (deptId: number) => deptOptions.value.find(d => d.id === deptId)?.deptName || String(deptId || '')
 
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
-const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, deptId: undefined })
+const queryParams = reactive({ pageNo: 1, pageSize: 10, name: undefined, deptId: undefined, title: undefined })
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
-const formData = reactive({ id: undefined as any, name: '', deptId: undefined as any, title: undefined as any, phone: '', status: 0 })
+const formData = reactive({ id: undefined as any, name: '', deptId: undefined as any, gender: undefined as any, age: undefined as any, title: undefined as any, phone: '', email: '' })
 
 const getList = async () => {
   loading.value = true
@@ -115,7 +119,7 @@ const getList = async () => {
 }
 
 const handleQuery = () => { queryParams.pageNo = 1; getList() }
-const resetQuery = () => { queryParams.name = undefined; queryParams.deptId = undefined; handleQuery() }
+const resetQuery = () => { queryParams.name = undefined; queryParams.deptId = undefined; queryParams.title = undefined; handleQuery() }
 
 const openForm = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增医生' : '编辑医生'
@@ -123,7 +127,7 @@ const openForm = async (type: string, id?: number) => {
     const res = await getDoctor(id)
     Object.assign(formData, res)
   } else {
-    Object.assign(formData, { id: undefined, name: '', deptId: undefined, title: undefined, phone: '', status: 0 })
+    Object.assign(formData, { id: undefined, name: '', deptId: undefined, gender: undefined, age: undefined, title: undefined, phone: '', email: '' })
   }
   dialogVisible.value = true
 }

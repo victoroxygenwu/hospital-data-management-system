@@ -13,7 +13,7 @@ public interface DepartmentMapper extends BaseMapperX<DepartmentDO> {
     default PageResult<DepartmentDO> selectPage(DepartmentPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<DepartmentDO>()
                 .likeIfPresent(DepartmentDO::getDeptName, reqVO.getDeptName())
-                .eqIfPresent(DepartmentDO::getPhone, reqVO.getPhone())
+                .likeIfPresent(DepartmentDO::getPhone, reqVO.getPhone())
                 .orderByDesc(DepartmentDO::getId));
     }
 
