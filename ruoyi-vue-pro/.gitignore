@@ -50,5 +50,8 @@ rebel.xml
 
 application-my.yaml
 
+# Archived removed modules (local backup only, not committed)
+.archived/
+
 /yudao-ui-app/unpackage/
 **/.DS_Store
