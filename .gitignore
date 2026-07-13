@@ -56,3 +56,12 @@ check_state.sql
 check_visit_date.sql
 cleanup_menus.sql
 test_direct_insert.sql
+
+# =============================================
+# AI / 开发工具本地文件
+# =============================================
+.playwright-cli/
+.workbuddy/
+**/LOG_FILE_IS_UNDEFINED
+CLAUDE.md
+docs/
