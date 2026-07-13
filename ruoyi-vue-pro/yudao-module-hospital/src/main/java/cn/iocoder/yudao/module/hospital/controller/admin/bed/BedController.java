@@ -71,6 +71,7 @@ public class BedController {
 
     @GetMapping("/list-by-ward")
     @Operation(summary = "获取某病房下的床位列表")
+    @PreAuthorize("@ss.hasPermission('hospital:bed:query')")
     @Parameter(name = "wardId", description = "病房ID", required = true)
     public CommonResult<List<BedRespVO>> getBedListByWardId(@RequestParam("wardId") Long wardId) {
         List<BedDO> list = bedService.getBedListByWardId(wardId);

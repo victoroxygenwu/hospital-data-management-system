@@ -7,7 +7,6 @@ import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.*;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
 import cn.iocoder.yudao.module.hospital.service.prescription.PrescriptionService;
-import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +27,6 @@ public class PrescriptionController {
 
     @Resource
     private PrescriptionService prescriptionService;
-    @Resource
-    private PrescriptionItemMapper prescriptionItemMapper;
 
     @PostMapping("/create")
     @Operation(summary = "创建处方")
@@ -63,7 +60,7 @@ public class PrescriptionController {
         PrescriptionDO prescription = prescriptionService.getPrescription(id);
         PrescriptionRespVO respVO = BeanUtils.toBean(prescription, PrescriptionRespVO.class);
         if (respVO != null) {
-            List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(id);
+            List<PrescriptionItemDO> items = prescriptionService.getPrescriptionItems(id);
             respVO.setItems(BeanUtils.toBean(items, PrescriptionRespVO.PrescriptionItemRespVO.class));
         }
         return success(respVO);

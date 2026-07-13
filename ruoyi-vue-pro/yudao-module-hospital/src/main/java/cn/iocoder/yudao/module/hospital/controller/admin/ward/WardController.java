@@ -75,6 +75,7 @@ public class WardController {
 
     @GetMapping("/list-by-dept")
     @Operation(summary = "获取某科室下的病房列表")
+    @PreAuthorize("@ss.hasPermission('hospital:ward:query')")
     @Parameter(name = "deptId", description = "科室ID", required = true)
     public CommonResult<List<WardRespVO>> getWardListByDeptId(@RequestParam("deptId") Long deptId) {
         List<WardDO> list = wardService.getWardListByDeptId(deptId);

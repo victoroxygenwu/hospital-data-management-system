@@ -70,6 +70,7 @@ public class DoctorController {
 
     @GetMapping("/list-by-dept")
     @Operation(summary = "获取某科室下的医生列表")
+    @PreAuthorize("@ss.hasPermission('hospital:doctor:query')")
     @Parameter(name = "deptId", description = "科室ID", required = true)
     public CommonResult<List<DoctorRespVO>> getDoctorListByDeptId(@RequestParam("deptId") Long deptId) {
         List<DoctorDO> list = doctorService.getDoctorListByDeptId(deptId);

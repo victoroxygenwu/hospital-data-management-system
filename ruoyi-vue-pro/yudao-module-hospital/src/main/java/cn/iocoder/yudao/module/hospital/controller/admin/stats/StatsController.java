@@ -1,16 +1,17 @@
 package cn.iocoder.yudao.module.hospital.controller.admin.stats;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.VisitTrendVO;
+import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.WardUsageVO;
+import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.MedicineStockVO;
 import cn.iocoder.yudao.module.hospital.service.stats.StatsService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
@@ -26,7 +27,7 @@ public class StatsController {
     @GetMapping("/visit-trend")
     @Operation(summary = "就诊趋势统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
-    public CommonResult<List<Map<String, Object>>> getVisitTrend(
+    public CommonResult<List<VisitTrendVO>> getVisitTrend(
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
         return success(statsService.getVisitTrend(startDate, endDate));
@@ -35,14 +36,14 @@ public class StatsController {
     @GetMapping("/ward-usage")
     @Operation(summary = "床位使用率统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
-    public CommonResult<List<Map<String, Object>>> getWardUsage() {
+    public CommonResult<List<WardUsageVO>> getWardUsage() {
         return success(statsService.getWardUsage());
     }
 
     @GetMapping("/medicine-stock")
     @Operation(summary = "药品库存统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
-    public CommonResult<List<Map<String, Object>>> getMedicineStock() {
+    public CommonResult<List<MedicineStockVO>> getMedicineStock() {
         return success(statsService.getMedicineStock());
     }
 }

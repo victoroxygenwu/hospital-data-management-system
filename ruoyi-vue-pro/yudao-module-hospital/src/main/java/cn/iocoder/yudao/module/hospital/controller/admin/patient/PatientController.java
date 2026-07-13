@@ -7,9 +7,8 @@ import cn.iocoder.yudao.module.hospital.controller.admin.patient.vo.*;
 import cn.iocoder.yudao.module.hospital.controller.admin.visit.vo.VisitRespVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PatientDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
-import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
 import cn.iocoder.yudao.module.hospital.service.patient.PatientService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.iocoder.yudao.module.hospital.service.visit.VisitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +30,7 @@ public class PatientController {
     @Resource
     private PatientService patientService;
     @Resource
-    private VisitMapper visitMapper;
+    private VisitService visitService;
 
     @PostMapping("/create")
     @Operation(summary = "创建病人")
@@ -79,7 +78,7 @@ public class PatientController {
     @Parameter(name = "id", description = "病人ID", required = true)
     @PreAuthorize("@ss.hasPermission('hospital:patient:query')")
     public CommonResult<List<VisitRespVO>> getPatientVisits(@PathVariable("id") Long id) {
-        List<VisitDO> visits = visitMapper.selectList(new QueryWrapper<VisitDO>().eq("patient_id", id).orderByDesc("visit_date"));
+        List<VisitDO> visits = visitService.getVisitsByPatientId(id);
         return success(BeanUtils.toBean(visits, VisitRespVO.class));
     }
 }

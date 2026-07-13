@@ -13,4 +13,8 @@ public interface WardService {
     WardDO getWard(Long id);
     PageResult<WardDO> getWardPage(WardPageReqVO pageReqVO);
     List<WardDO> getWardListByDeptId(Long deptId);
+    /** 已用床位数 +1 */
+    void incrementUsedBeds(Long wardId);
+    /** 已用床位数 -1（不小于0） */
+    void decrementUsedBeds(Long wardId);
 }

@@ -54,6 +54,24 @@ public class WardServiceImpl implements WardService {
         return wardMapper.selectListByDeptId(deptId);
     }
 
+    @Override
+    public void incrementUsedBeds(Long wardId) {
+        WardDO ward = wardMapper.selectById(wardId);
+        if (ward != null) {
+            wardMapper.updateById(WardDO.builder().id(wardId)
+                    .usedBeds(ward.getUsedBeds() + 1).build());
+        }
+    }
+
+    @Override
+    public void decrementUsedBeds(Long wardId) {
+        WardDO ward = wardMapper.selectById(wardId);
+        if (ward != null && ward.getUsedBeds() > 0) {
+            wardMapper.updateById(WardDO.builder().id(wardId)
+                    .usedBeds(ward.getUsedBeds() - 1).build());
+        }
+    }
+
     private void validateWardExists(Long id) {
         if (id == null) return;
         if (wardMapper.selectById(id) == null) {

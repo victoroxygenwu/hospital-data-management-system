@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_STOCK_NOT_ENOUGH;
 
 @Service
 public class MedicineServiceImpl implements MedicineService {
@@ -46,6 +47,15 @@ public class MedicineServiceImpl implements MedicineService {
     @Override
     public PageResult<MedicineDO> getMedicinePage(MedicinePageReqVO pageReqVO) {
         return medicineMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public void decrementStock(Long medicineId, int quantity) {
+        MedicineDO medicine = medicineMapper.selectById(medicineId);
+        if (medicine == null) throw exception(MEDICINE_NOT_EXISTS);
+        if (medicine.getStock() < quantity) throw exception(MEDICINE_STOCK_NOT_ENOUGH);
+        medicineMapper.updateById(MedicineDO.builder().id(medicineId)
+                .stock(medicine.getStock() - quantity).build());
     }
 
     private void validateMedicineExists(Long id) {

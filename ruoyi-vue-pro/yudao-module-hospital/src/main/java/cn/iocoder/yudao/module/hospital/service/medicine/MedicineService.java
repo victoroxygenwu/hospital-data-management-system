@@ -11,4 +11,6 @@ public interface MedicineService {
     void deleteMedicine(Long id);
     MedicineDO getMedicine(Long id);
     PageResult<MedicineDO> getMedicinePage(MedicinePageReqVO pageReqVO);
+    /** 扣减药品库存（校验库存充足） */
+    void decrementStock(Long medicineId, int quantity);
 }

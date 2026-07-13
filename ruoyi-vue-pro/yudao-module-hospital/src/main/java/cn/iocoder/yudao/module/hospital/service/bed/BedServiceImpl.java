@@ -6,8 +6,7 @@ import cn.iocoder.yudao.module.hospital.controller.admin.bed.vo.BedPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.bed.vo.BedSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
-import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
-import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
+import cn.iocoder.yudao.module.hospital.service.ward.WardService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
@@ -23,7 +22,7 @@ public class BedServiceImpl implements BedService {
     @Resource
     private BedMapper bedMapper;
     @Resource
-    private WardMapper wardMapper;
+    private WardService wardService;
 
     @Override
     public Long createBed(BedSaveReqVO createReqVO) {
@@ -66,15 +65,9 @@ public class BedServiceImpl implements BedService {
         BedDO bed = bedMapper.selectById(bedId);
         if (bed == null) throw exception(BED_NOT_EXISTS);
         if ("已占用".equals(bed.getStatus())) throw exception(BED_ALREADY_OCCUPIED);
-        // 更新床位状态
         bedMapper.updateById(BedDO.builder().id(bedId).status("已占用")
                 .patientId(patientId).admissionTime(LocalDateTime.now()).build());
-        // 更新病房已用床位数
-        WardDO ward = wardMapper.selectById(bed.getWardId());
-        if (ward != null) {
-            wardMapper.updateById(WardDO.builder().id(ward.getId())
-                    .usedBeds(ward.getUsedBeds() + 1).build());
-        }
+        wardService.incrementUsedBeds(bed.getWardId());
     }
 
     @Override
@@ -85,11 +78,7 @@ public class BedServiceImpl implements BedService {
         if (!"已占用".equals(bed.getStatus())) throw exception(BED_NOT_OCCUPIED);
         bedMapper.updateById(BedDO.builder().id(bedId).status("空闲")
                 .patientId(null).admissionTime(null).build());
-        WardDO ward = wardMapper.selectById(bed.getWardId());
-        if (ward != null && ward.getUsedBeds() > 0) {
-            wardMapper.updateById(WardDO.builder().id(ward.getId())
-                    .usedBeds(ward.getUsedBeds() - 1).build());
-        }
+        wardService.decrementUsedBeds(bed.getWardId());
     }
 
     private void validateBedExists(Long id) {

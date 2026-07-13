@@ -70,6 +70,7 @@ public class DepartmentController {
 
     @GetMapping("/list-all")
     @Operation(summary = "获取科室全列表（下拉选择用）")
+    @PreAuthorize("@ss.hasPermission('hospital:department:query')")
     public CommonResult<List<DepartmentRespVO>> getDepartmentList() {
         List<DepartmentDO> list = departmentService.getDepartmentList();
         return success(BeanUtils.toBean(list, DepartmentRespVO.class));

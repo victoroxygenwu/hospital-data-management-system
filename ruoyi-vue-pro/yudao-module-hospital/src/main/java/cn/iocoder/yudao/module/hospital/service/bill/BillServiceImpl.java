@@ -6,7 +6,9 @@ import cn.iocoder.yudao.module.hospital.controller.admin.bill.vo.BillPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.bill.vo.BillSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.BillDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 
@@ -18,6 +20,8 @@ public class BillServiceImpl implements BillService {
 
     @Resource
     private BillMapper billMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     public Long createBill(BillSaveReqVO createReqVO) {
@@ -46,10 +50,18 @@ public class BillServiceImpl implements BillService {
 
     @Override
     public PageResult<BillDO> getBillPage(BillPageReqVO pageReqVO) {
+        // 角色数据隔离：患者只看自己的账单
+        if (!securityContext.isAdmin()) {
+            Long patientId = securityContext.getCurrentPatientId();
+            if (patientId != null) {
+                pageReqVO.setPatientId(patientId);
+            }
+        }
         return billMapper.selectPage(pageReqVO);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void payBill(Long id, String payMethod) {
         BillDO bill = billMapper.selectById(id);
         if (bill == null) throw exception(BILL_NOT_EXISTS);

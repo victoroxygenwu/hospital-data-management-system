@@ -7,9 +7,10 @@ import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.Prescri
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
-import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
+import cn.iocoder.yudao.module.hospital.service.medicine.MedicineService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
@@ -26,17 +27,18 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Resource
     private PrescriptionItemMapper prescriptionItemMapper;
     @Resource
-    private MedicineMapper medicineMapper;
+    private MedicineService medicineService;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createPrescription(PrescriptionSaveReqVO createReqVO) {
         PrescriptionDO prescription = BeanUtils.toBean(createReqVO, PrescriptionDO.class);
         prescriptionMapper.insert(prescription);
-        // 保存处方明细
         if (createReqVO.getItems() != null) {
             for (PrescriptionSaveReqVO.PrescriptionItemSaveVO itemVO : createReqVO.getItems()) {
-                MedicineDO medicine = medicineMapper.selectById(itemVO.getMedicineId());
+                MedicineDO medicine = medicineService.getMedicine(itemVO.getMedicineId());
                 PrescriptionItemDO item = PrescriptionItemDO.builder()
                         .prescriptionId(prescription.getId())
                         .medicineId(itemVO.getMedicineId())
@@ -56,14 +58,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         validatePrescriptionExists(updateReqVO.getId());
         PrescriptionDO updateObj = BeanUtils.toBean(updateReqVO, PrescriptionDO.class);
         prescriptionMapper.updateById(updateObj);
-        // 更新处方明细：先删后增
         if (updateReqVO.getItems() != null) {
             List<PrescriptionItemDO> oldItems = prescriptionItemMapper.selectListByPrescriptionId(updateReqVO.getId());
             for (PrescriptionItemDO oldItem : oldItems) {
                 prescriptionItemMapper.deleteById(oldItem.getId());
             }
             for (PrescriptionSaveReqVO.PrescriptionItemSaveVO itemVO : updateReqVO.getItems()) {
-                MedicineDO medicine = medicineMapper.selectById(itemVO.getMedicineId());
+                MedicineDO medicine = medicineService.getMedicine(itemVO.getMedicineId());
                 PrescriptionItemDO item = PrescriptionItemDO.builder()
                         .prescriptionId(updateReqVO.getId())
                         .medicineId(itemVO.getMedicineId())
@@ -89,6 +90,12 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public PageResult<PrescriptionDO> getPrescriptionPage(PrescriptionPageReqVO pageReqVO) {
+        if (!securityContext.isAdmin()) {
+            Long doctorId = securityContext.getCurrentDoctorId();
+            if (doctorId != null) {
+                pageReqVO.setDoctorId(doctorId);
+            }
+        }
         return prescriptionMapper.selectPage(pageReqVO);
     }
 
@@ -98,17 +105,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         PrescriptionDO prescription = prescriptionMapper.selectById(id);
         if (prescription == null) throw exception(PRESCRIPTION_NOT_EXISTS);
         if ("已发药".equals(prescription.getStatus())) return;
-        // 扣减药品库存
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(id);
         for (PrescriptionItemDO item : items) {
-            MedicineDO medicine = medicineMapper.selectById(item.getMedicineId());
-            if (medicine == null) throw exception(MEDICINE_NOT_EXISTS);
-            if (medicine.getStock() < item.getQuantity()) throw exception(MEDICINE_STOCK_NOT_ENOUGH);
-            medicineMapper.updateById(MedicineDO.builder().id(medicine.getId())
-                    .stock(medicine.getStock() - item.getQuantity()).build());
+            medicineService.decrementStock(item.getMedicineId(), item.getQuantity());
         }
-        // 更新处方状态
         prescriptionMapper.updateById(PrescriptionDO.builder().id(id).status("已发药").build());
+    }
+
+    @Override
+    public List<PrescriptionItemDO> getPrescriptionItems(Long prescriptionId) {
+        return prescriptionItemMapper.selectListByPrescriptionId(prescriptionId);
     }
 
     private void validatePrescriptionExists(Long id) {
