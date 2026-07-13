@@ -6,21 +6,25 @@ import cn.iocoder.yudao.module.hospital.controller.admin.doctor.vo.DoctorPageReq
 import cn.iocoder.yudao.module.hospital.controller.admin.doctor.vo.DoctorSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DoctorDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.DoctorMapper;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.DOCTOR_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.*;
 
 @Service
 public class DoctorServiceImpl implements DoctorService {
 
     @Resource
     private DoctorMapper doctorMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     public Long createDoctor(DoctorSaveReqVO createReqVO) {
+        securityContext.requireAdmin();
         DoctorDO doctor = BeanUtils.toBean(createReqVO, DoctorDO.class);
         doctorMapper.insert(doctor);
         return doctor.getId();
@@ -28,6 +32,7 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public void updateDoctor(DoctorSaveReqVO updateReqVO) {
+        securityContext.requireAdmin();
         validateDoctorExists(updateReqVO.getId());
         DoctorDO updateObj = BeanUtils.toBean(updateReqVO, DoctorDO.class);
         doctorMapper.updateById(updateObj);
@@ -35,6 +40,7 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public void deleteDoctor(Long id) {
+        securityContext.requireAdmin();
         validateDoctorExists(id);
         doctorMapper.deleteById(id);
     }

@@ -35,4 +35,8 @@ public interface ErrorCodeConstants {
     // ========== 账单 1-100-009-000 ==========
     ErrorCode BILL_NOT_EXISTS = new ErrorCode(1_100_009_000, "账单不存在");
     ErrorCode BILL_ALREADY_PAID = new ErrorCode(1_100_009_001, "账单已支付");
+
+    // ========== 通用 1-100-999-000 ==========
+    ErrorCode HOSPITAL_PERMISSION_DENIED = new ErrorCode(1_100_999_000, "无权限执行此操作");
+    ErrorCode HOSPITAL_DATA_ACCESS_DENIED = new ErrorCode(1_100_999_001, "无权访问该数据");
 }

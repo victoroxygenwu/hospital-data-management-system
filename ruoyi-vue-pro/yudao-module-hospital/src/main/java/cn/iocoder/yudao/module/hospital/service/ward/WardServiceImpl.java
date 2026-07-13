@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
@@ -25,9 +26,12 @@ public class WardServiceImpl implements WardService {
     private WardMapper wardMapper;
     @Resource
     private BedMapper bedMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     public Long createWard(WardSaveReqVO createReqVO) {
+        securityContext.requireAdmin();
         WardDO ward = BeanUtils.toBean(createReqVO, WardDO.class);
         wardMapper.insert(ward);
         return ward.getId();
@@ -35,6 +39,7 @@ public class WardServiceImpl implements WardService {
 
     @Override
     public void updateWard(WardSaveReqVO updateReqVO) {
+        securityContext.requireAdmin();
         validateWardExists(updateReqVO.getId());
         WardDO updateObj = BeanUtils.toBean(updateReqVO, WardDO.class);
         wardMapper.updateById(updateObj);
@@ -43,6 +48,7 @@ public class WardServiceImpl implements WardService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteWard(Long id) {
+        securityContext.requireAdmin();
         validateWardExists(id);
         // 级联删除病房下所有床位，避免孤儿数据
         bedMapper.delete(BedDO::getWardId, id);

@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
+import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_PERMISSION_DENIED;
+
 /**
  * 医院模块安全上下文 —— 获取当前登录用户对应的医生/患者身份
  */
@@ -28,8 +31,16 @@ public class HospitalSecurityContext {
     public boolean isAdmin() {
         LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         if (loginUser == null) return false;
-        // 框架的 super_admin 和 tenant_admin 都是管理员
         return loginUser.getUserType() != null && loginUser.getUserType() <= 2;
+    }
+
+    /**
+     * 要求当前用户是管理员，否则抛出权限异常
+     */
+    public void requireAdmin() {
+        if (!isAdmin()) {
+            throw exception(HOSPITAL_PERMISSION_DENIED);
+        }
     }
 
     /**

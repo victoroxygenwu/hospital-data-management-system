@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.hospital.controller.admin.bed.vo.BedPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.bed.vo.BedSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.module.hospital.service.ward.WardService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +23,12 @@ public class BedServiceImpl implements BedService {
     private BedMapper bedMapper;
     @Resource
     private WardService wardService;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     public Long createBed(BedSaveReqVO createReqVO) {
+        securityContext.requireAdmin();
         BedDO bed = BeanUtils.toBean(createReqVO, BedDO.class);
         bedMapper.insert(bed);
         return bed.getId();
@@ -32,6 +36,7 @@ public class BedServiceImpl implements BedService {
 
     @Override
     public void updateBed(BedSaveReqVO updateReqVO) {
+        securityContext.requireAdmin();
         validateBedExists(updateReqVO.getId());
         BedDO updateObj = BeanUtils.toBean(updateReqVO, BedDO.class);
         bedMapper.updateById(updateObj);
@@ -39,6 +44,7 @@ public class BedServiceImpl implements BedService {
 
     @Override
     public void deleteBed(Long id) {
+        securityContext.requireAdmin();
         BedDO bed = bedMapper.selectById(id);
         if (bed == null) throw exception(BED_NOT_EXISTS);
         // 如果床位被占用，需先递减病房已用床位数

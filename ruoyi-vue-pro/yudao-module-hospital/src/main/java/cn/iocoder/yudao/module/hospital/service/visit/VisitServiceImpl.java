@@ -21,6 +21,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.VISIT_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_DATA_ACCESS_DENIED;
 
 @Service
 public class VisitServiceImpl implements VisitService {
@@ -87,6 +88,13 @@ public class VisitServiceImpl implements VisitService {
 
     @Override
     public List<VisitDO> getVisitsByPatientId(Long patientId) {
+        // 权限校验：非管理员只能查自己的就诊记录
+        if (!securityContext.isAdmin()) {
+            Long currentPatientId = securityContext.getCurrentPatientId();
+            if (currentPatientId == null || !currentPatientId.equals(patientId)) {
+                throw exception(HOSPITAL_DATA_ACCESS_DENIED);
+            }
+        }
         return visitMapper.selectList(
                 new LambdaQueryWrapperX<VisitDO>().eq(VisitDO::getPatientId, patientId).orderByDesc(VisitDO::getVisitDate));
     }
