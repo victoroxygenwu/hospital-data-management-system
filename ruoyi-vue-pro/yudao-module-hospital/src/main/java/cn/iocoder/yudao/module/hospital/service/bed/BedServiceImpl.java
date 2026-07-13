@@ -10,7 +10,6 @@ import cn.iocoder.yudao.module.hospital.service.ward.WardService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -40,7 +39,12 @@ public class BedServiceImpl implements BedService {
 
     @Override
     public void deleteBed(Long id) {
-        validateBedExists(id);
+        BedDO bed = bedMapper.selectById(id);
+        if (bed == null) throw exception(BED_NOT_EXISTS);
+        // 如果床位被占用，需先递减病房已用床位数
+        if (bed.getPatientId() != null) {
+            wardService.decrementUsedBeds(bed.getWardId());
+        }
         bedMapper.deleteById(id);
     }
 
@@ -62,22 +66,27 @@ public class BedServiceImpl implements BedService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignBed(Long bedId, Long patientId) {
-        BedDO bed = bedMapper.selectById(bedId);
-        if (bed == null) throw exception(BED_NOT_EXISTS);
-        if ("已占用".equals(bed.getStatus())) throw exception(BED_ALREADY_OCCUPIED);
-        bedMapper.updateById(BedDO.builder().id(bedId).status("已占用")
-                .patientId(patientId).admissionTime(LocalDateTime.now()).build());
+        BedDO bed = getBedOrThrow(bedId);
+        // 原子分配：WHERE status='空闲' 防止并发重复分配
+        int affected = bedMapper.assignBed(bedId, patientId);
+        if (affected == 0) throw exception(BED_ALREADY_OCCUPIED);
         wardService.incrementUsedBeds(bed.getWardId());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void releaseBed(Long bedId) {
+        BedDO bed = getBedOrThrow(bedId);
+        // 原子释放：WHERE status='已占用' 防止并发重复释放
+        int affected = bedMapper.releaseBed(bedId);
+        if (affected == 0) throw exception(BED_NOT_OCCUPIED);
+        wardService.decrementUsedBeds(bed.getWardId());
+    }
+
+    private BedDO getBedOrThrow(Long bedId) {
         BedDO bed = bedMapper.selectById(bedId);
         if (bed == null) throw exception(BED_NOT_EXISTS);
-        if (!"已占用".equals(bed.getStatus())) throw exception(BED_NOT_OCCUPIED);
-        bedMapper.releaseBed(bedId);
-        wardService.decrementUsedBeds(bed.getWardId());
+        return bed;
     }
 
     private void validateBedExists(Long id) {

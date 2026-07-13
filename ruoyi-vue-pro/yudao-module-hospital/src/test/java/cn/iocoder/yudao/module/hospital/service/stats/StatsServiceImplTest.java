@@ -10,21 +10,17 @@ import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +45,7 @@ class StatsServiceImplTest {
         when(securityContext.isAdmin()).thenReturn(true);
         VisitDO visit = VisitDO.builder()
                 .visitDate(LocalDateTime.of(2026, 7, 13, 9, 0)).build();
-        when(visitMapper.selectList(any(QueryWrapper.class)))
+        when(visitMapper.selectList(any()))
                 .thenReturn(Collections.singletonList(visit));
 
         List<VisitTrendVO> result = statsService.getVisitTrend("2026-07-01", "2026-07-31");
@@ -63,7 +59,7 @@ class StatsServiceImplTest {
     void getWardUsage_admin_shouldReturnData() {
         when(securityContext.isAdmin()).thenReturn(true);
         WardDO ward = WardDO.builder().id(1L).wardNo("301").capacity(6).usedBeds(4).build();
-        when(wardMapper.selectList(any(QueryWrapper.class)))
+        when(wardMapper.selectList(any()))
                 .thenReturn(Collections.singletonList(ward));
 
         List<WardUsageVO> result = statsService.getWardUsage();
@@ -78,7 +74,7 @@ class StatsServiceImplTest {
         when(securityContext.isAdmin()).thenReturn(true);
         MedicineDO med = MedicineDO.builder().id(1L).name("阿莫西林")
                 .stock(5).specification("0.25g").unit("盒").expiryDate(null).build();
-        when(medicineMapper.selectList(any(QueryWrapper.class)))
+        when(medicineMapper.selectList(any()))
                 .thenReturn(Collections.singletonList(med));
 
         List<MedicineStockVO> result = statsService.getMedicineStock();
@@ -98,7 +94,7 @@ class StatsServiceImplTest {
         List<VisitTrendVO> result = statsService.getVisitTrend(null, null);
 
         assertTrue(result.isEmpty());
-        verify(visitMapper, never()).selectList(any(QueryWrapper.class));
+        verify(visitMapper, never()).selectList(any());
     }
 
     @Test
@@ -108,7 +104,7 @@ class StatsServiceImplTest {
         List<WardUsageVO> result = statsService.getWardUsage();
 
         assertTrue(result.isEmpty());
-        verify(wardMapper, never()).selectList(any(QueryWrapper.class));
+        verify(wardMapper, never()).selectList(any());
     }
 
     @Test
@@ -118,7 +114,7 @@ class StatsServiceImplTest {
         List<MedicineStockVO> result = statsService.getMedicineStock();
 
         assertTrue(result.isEmpty());
-        verify(medicineMapper, never()).selectList(any(QueryWrapper.class));
+        verify(medicineMapper, never()).selectList(any());
     }
 
     // ==================== edge cases ====================
@@ -127,7 +123,7 @@ class StatsServiceImplTest {
     void getWardUsage_zeroCapacity_shouldReturnZeroRate() {
         when(securityContext.isAdmin()).thenReturn(true);
         WardDO ward = WardDO.builder().id(1L).wardNo("401").capacity(0).usedBeds(0).build();
-        when(wardMapper.selectList(any(QueryWrapper.class)))
+        when(wardMapper.selectList(any()))
                 .thenReturn(Collections.singletonList(ward));
 
         List<WardUsageVO> result = statsService.getWardUsage();
@@ -139,7 +135,7 @@ class StatsServiceImplTest {
     void getMedicineStock_highStock_shouldNotWarn() {
         when(securityContext.isAdmin()).thenReturn(true);
         MedicineDO med = MedicineDO.builder().id(1L).name("创可贴").stock(500).build();
-        when(medicineMapper.selectList(any(QueryWrapper.class)))
+        when(medicineMapper.selectList(any()))
                 .thenReturn(Collections.singletonList(med));
 
         List<MedicineStockVO> result = statsService.getMedicineStock();

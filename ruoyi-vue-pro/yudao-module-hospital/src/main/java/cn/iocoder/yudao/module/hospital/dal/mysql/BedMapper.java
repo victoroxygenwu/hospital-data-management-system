@@ -22,11 +22,15 @@ public interface BedMapper extends BaseMapperX<BedDO> {
     }
 
     default List<BedDO> selectListByWardId(Long wardId) {
-        return selectList(new LambdaQueryWrapperX<BedDO>().eqIfPresent(BedDO::getWardId, wardId));
+        return selectList(BedDO::getWardId, wardId);
     }
 
-    /** 释放床位，清除患者信息和入院时间（显式 SQL 保证 null 字段写入） */
-    @Update("UPDATE hospital_bed SET status = '空闲', patient_id = NULL, admission_time = NULL WHERE id = #{id}")
+    /** 分配床位（原子 SQL，WHERE status='空闲' 防止并发重复分配） */
+    @Update("UPDATE hospital_bed SET status = '已占用', patient_id = #{patientId}, admission_time = NOW() WHERE id = #{bedId} AND status = '空闲'")
+    int assignBed(@Param("bedId") Long bedId, @Param("patientId") Long patientId);
+
+    /** 释放床位（WHERE status='已占用' 防止并发重复释放），显式 SQL 保证 null 字段写入 */
+    @Update("UPDATE hospital_bed SET status = '空闲', patient_id = NULL, admission_time = NULL WHERE id = #{id} AND status = '已占用'")
     int releaseBed(@Param("id") Long id);
 
 }

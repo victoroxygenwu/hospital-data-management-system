@@ -8,9 +8,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.BillDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.*;
@@ -61,14 +59,12 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void payBill(Long id, String payMethod) {
         BillDO bill = billMapper.selectById(id);
         if (bill == null) throw exception(BILL_NOT_EXISTS);
-        if ("已支付".equals(bill.getStatus())) throw exception(BILL_ALREADY_PAID);
-        billMapper.updateById(BillDO.builder().id(id).status("已支付")
-                .payAmount(bill.getTotalAmount()).payTime(LocalDateTime.now())
-                .payMethod(payMethod).build());
+        // 原子支付：WHERE status!='已支付' 防止重复付款，pay_amount 直接取 total_amount 列
+        int affected = billMapper.payBill(id, payMethod);
+        if (affected == 0) throw exception(BILL_ALREADY_PAID);
     }
 
     private void validateBillExists(Long id) {

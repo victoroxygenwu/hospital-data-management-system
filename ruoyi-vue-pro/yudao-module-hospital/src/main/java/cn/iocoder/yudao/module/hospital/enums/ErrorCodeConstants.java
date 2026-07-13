@@ -15,6 +15,7 @@ public interface ErrorCodeConstants {
     // ========== 病房 1-100-004-000 ==========
     ErrorCode WARD_NOT_EXISTS = new ErrorCode(1_100_004_000, "病房不存在");
     ErrorCode WARD_CAPACITY_FULL = new ErrorCode(1_100_004_001, "病房床位已满");
+    ErrorCode WARD_NO_BED_TO_RELEASE = new ErrorCode(1_100_004_002, "无已占用床位可释放");
 
     // ========== 床位 1-100-005-000 ==========
     ErrorCode BED_NOT_EXISTS = new ErrorCode(1_100_005_000, "床位不存在");

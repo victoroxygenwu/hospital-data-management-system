@@ -20,7 +20,7 @@ public interface DoctorMapper extends BaseMapperX<DoctorDO> {
     }
 
     default List<DoctorDO> selectListByDeptId(Long deptId) {
-        return selectList(new LambdaQueryWrapperX<DoctorDO>().eqIfPresent(DoctorDO::getDeptId, deptId));
+        return selectList(DoctorDO::getDeptId, deptId);
     }
 
 }

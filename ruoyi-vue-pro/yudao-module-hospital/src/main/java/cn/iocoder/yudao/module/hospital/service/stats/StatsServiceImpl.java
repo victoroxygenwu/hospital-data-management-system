@@ -1,19 +1,29 @@
 package cn.iocoder.yudao.module.hospital.service.stats;
 
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.VisitTrendVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.WardUsageVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.MedicineStockVO;
-import cn.iocoder.yudao.module.hospital.dal.mysql.*;
-import cn.iocoder.yudao.module.hospital.dal.dataobject.*;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
+import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class StatsServiceImpl implements StatsService {
+
+    private static final int STOCK_WARNING_THRESHOLD = 10;
 
     @Resource
     private HospitalSecurityContext securityContext;
@@ -23,8 +33,6 @@ public class StatsServiceImpl implements StatsService {
     @Resource
     private WardMapper wardMapper;
     @Resource
-    private BedMapper bedMapper;
-    @Resource
     private MedicineMapper medicineMapper;
 
     @Override
@@ -32,17 +40,16 @@ public class StatsServiceImpl implements StatsService {
         if (!securityContext.isAdmin()) {
             return Collections.emptyList();
         }
-        List<VisitDO> visits = visitMapper.selectList(new QueryWrapper<VisitDO>()
-                .ge(startDate != null, "visit_date", startDate + " 00:00:00")
-                .le(endDate != null, "visit_date", endDate + " 23:59:59")
-                .orderByAsc("visit_date"));
+        List<VisitDO> visits = visitMapper.selectList(new LambdaQueryWrapperX<VisitDO>()
+                .ge(startDate != null, VisitDO::getVisitDate, startDate + " 00:00:00")
+                .le(endDate != null, VisitDO::getVisitDate, endDate + " 23:59:59")
+                .orderByAsc(VisitDO::getVisitDate));
         Map<String, Long> grouped = visits.stream()
                 .collect(Collectors.groupingBy(v -> v.getVisitDate().toLocalDate().toString(), Collectors.counting()));
-        List<VisitTrendVO> result = grouped.entrySet().stream()
+        return grouped.entrySet().stream()
                 .map(e -> VisitTrendVO.builder().date(e.getKey()).count(e.getValue()).build())
                 .sorted(Comparator.comparing(VisitTrendVO::getDate))
                 .collect(Collectors.toList());
-        return result;
     }
 
     @Override
@@ -50,19 +57,15 @@ public class StatsServiceImpl implements StatsService {
         if (!securityContext.isAdmin()) {
             return Collections.emptyList();
         }
-        List<WardDO> wards = wardMapper.selectList(new QueryWrapper<>());
-        List<WardUsageVO> result = new ArrayList<>();
-        for (WardDO ward : wards) {
-            result.add(WardUsageVO.builder()
-                    .wardId(ward.getId())
-                    .wardNo(ward.getWardNo())
-                    .capacity(ward.getCapacity())
-                    .usedBeds(ward.getUsedBeds())
-                    .usageRate(ward.getCapacity() > 0
-                            ? String.format("%.1f%%", ward.getUsedBeds() * 100.0 / ward.getCapacity()) : "0%")
-                    .build());
-        }
-        return result;
+        List<WardDO> wards = wardMapper.selectList(new LambdaQueryWrapperX<>());
+        return wards.stream().map(ward -> WardUsageVO.builder()
+                .wardId(ward.getId())
+                .wardNo(ward.getWardNo())
+                .capacity(ward.getCapacity())
+                .usedBeds(ward.getUsedBeds())
+                .usageRate(ward.getCapacity() > 0
+                        ? String.format("%.1f%%", ward.getUsedBeds() * 100.0 / ward.getCapacity()) : "0%")
+                .build()).collect(Collectors.toList());
     }
 
     @Override
@@ -70,20 +73,16 @@ public class StatsServiceImpl implements StatsService {
         if (!securityContext.isAdmin()) {
             return Collections.emptyList();
         }
-        List<MedicineDO> medicines = medicineMapper.selectList(new QueryWrapper<MedicineDO>()
-                .orderByAsc("stock"));
-        List<MedicineStockVO> result = new ArrayList<>();
-        for (MedicineDO med : medicines) {
-            result.add(MedicineStockVO.builder()
-                    .id(med.getId())
-                    .name(med.getName())
-                    .specification(med.getSpecification())
-                    .unit(med.getUnit())
-                    .stock(med.getStock())
-                    .expiryDate(med.getExpiryDate() != null ? med.getExpiryDate().toString() : "")
-                    .stockWarning(med.getStock() != null && med.getStock() < 10)
-                    .build());
-        }
-        return result;
+        List<MedicineDO> medicines = medicineMapper.selectList(
+                new LambdaQueryWrapperX<MedicineDO>().orderByAsc(MedicineDO::getStock));
+        return medicines.stream().map(med -> MedicineStockVO.builder()
+                .id(med.getId())
+                .name(med.getName())
+                .specification(med.getSpecification())
+                .unit(med.getUnit())
+                .stock(med.getStock())
+                .expiryDate(Objects.toString(med.getExpiryDate(), ""))
+                .stockWarning(med.getStock() != null && med.getStock() < STOCK_WARNING_THRESHOLD)
+                .build()).collect(Collectors.toList());
     }
 }

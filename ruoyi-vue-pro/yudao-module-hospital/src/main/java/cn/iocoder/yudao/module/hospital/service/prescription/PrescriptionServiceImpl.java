@@ -49,8 +49,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         Set<Long> medicineIds = createReqVO.getItems().stream()
                 .map(PrescriptionSaveReqVO.PrescriptionItemSaveVO::getMedicineId)
                 .collect(Collectors.toSet());
-        Map<Long, MedicineDO> medicineMap = medicineService.getMedicineListByIds(medicineIds).stream()
-                .collect(Collectors.toMap(MedicineDO::getId, m -> m));
+        Map<Long, MedicineDO> medicineMap = getMedicineMap(medicineIds);
 
         // 批量插入处方明细
         List<PrescriptionItemDO> items = createReqVO.getItems().stream().map(itemVO -> {
@@ -84,14 +83,15 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .collect(Collectors.toSet());
 
         // 批量查询所有涉及的药品（避免 N+1）
-        Map<Long, MedicineDO> medicineMap = medicineService.getMedicineListByIds(newMedicineIds).stream()
-                .collect(Collectors.toMap(MedicineDO::getId, m -> m));
+        Map<Long, MedicineDO> medicineMap = getMedicineMap(newMedicineIds);
 
-        // 1. 删除在新明细中不存在的旧项目
-        for (PrescriptionItemDO oldItem : oldItems) {
-            if (!newMedicineIds.contains(oldItem.getMedicineId())) {
-                prescriptionItemMapper.deleteById(oldItem.getId());
-            }
+        // 1. 批量删除在新明细中不存在的旧项目
+        List<Long> deleteIds = oldItems.stream()
+                .filter(item -> !newMedicineIds.contains(item.getMedicineId()))
+                .map(PrescriptionItemDO::getId)
+                .collect(Collectors.toList());
+        if (!deleteIds.isEmpty()) {
+            prescriptionItemMapper.deleteBatchIds(deleteIds);
         }
 
         // 2. 更新现有项目 / 收集新项目
@@ -125,8 +125,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePrescription(Long id) {
         validatePrescriptionExists(id);
+        // 级联删除处方明细，避免孤儿数据
+        prescriptionItemMapper.delete(PrescriptionItemDO::getPrescriptionId, id);
         prescriptionMapper.deleteById(id);
     }
 
@@ -151,17 +154,23 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public void dispensePrescription(Long id) {
         PrescriptionDO prescription = prescriptionMapper.selectById(id);
         if (prescription == null) throw exception(PRESCRIPTION_NOT_EXISTS);
-        if ("已发药".equals(prescription.getStatus())) return;
+        // 原子状态更新：WHERE status!='已发药' 防止并发重复发药
+        int affected = prescriptionMapper.dispense(id);
+        if (affected == 0) return; // 已发药，幂等返回
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(id);
         for (PrescriptionItemDO item : items) {
             medicineService.decrementStock(item.getMedicineId(), item.getQuantity());
         }
-        prescriptionMapper.updateById(PrescriptionDO.builder().id(id).status("已发药").build());
     }
 
     @Override
     public List<PrescriptionItemDO> getPrescriptionItems(Long prescriptionId) {
         return prescriptionItemMapper.selectListByPrescriptionId(prescriptionId);
+    }
+
+    private Map<Long, MedicineDO> getMedicineMap(Set<Long> medicineIds) {
+        return medicineService.getMedicineListByIds(medicineIds).stream()
+                .collect(Collectors.toMap(MedicineDO::getId, m -> m));
     }
 
     private void validatePrescriptionExists(Long id) {

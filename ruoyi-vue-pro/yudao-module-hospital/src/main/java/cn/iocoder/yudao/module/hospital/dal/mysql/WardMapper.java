@@ -23,7 +23,7 @@ public interface WardMapper extends BaseMapperX<WardDO> {
     }
 
     default List<WardDO> selectListByDeptId(Long deptId) {
-        return selectList(new LambdaQueryWrapperX<WardDO>().eqIfPresent(WardDO::getDeptId, deptId));
+        return selectList(WardDO::getDeptId, deptId);
     }
 
     /**

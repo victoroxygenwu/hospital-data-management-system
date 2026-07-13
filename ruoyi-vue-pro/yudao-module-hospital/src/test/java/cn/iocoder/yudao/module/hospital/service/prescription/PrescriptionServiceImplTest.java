@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.hospital.service.prescription;
 
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
@@ -8,25 +7,22 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
+import cn.iocoder.yudao.module.hospital.enums.PrescriptionStatusEnum;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.module.hospital.service.medicine.MedicineService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -134,7 +130,7 @@ class PrescriptionServiceImplTest {
         // 药品3：应该 insertBatch（新增）
         verify(prescriptionItemMapper).insertBatch(any());
         // 不应有 delete（所有旧药品都保留）
-        verify(prescriptionItemMapper, never()).deleteById(anyLong());
+        verify(prescriptionItemMapper, never()).deleteBatchIds(any());
     }
 
     @Test
@@ -160,7 +156,7 @@ class PrescriptionServiceImplTest {
         prescriptionService.updatePrescription(reqVO);
 
         // 药品2应该被删除
-        verify(prescriptionItemMapper).deleteById(2L);
+        verify(prescriptionItemMapper).deleteBatchIds(any());
         // 药品1应该被更新
         verify(prescriptionItemMapper).updateById(any(PrescriptionItemDO.class));
     }
@@ -170,8 +166,10 @@ class PrescriptionServiceImplTest {
     @Test
     void dispensePrescription_shouldDecrementStockAndSetStatus() {
         Long prescriptionId = 100L;
-        PrescriptionDO prescription = PrescriptionDO.builder().id(prescriptionId).status("待发药").build();
+        PrescriptionDO prescription = PrescriptionDO.builder().id(prescriptionId)
+                .status(PrescriptionStatusEnum.PENDING.getCode()).build();
         when(prescriptionMapper.selectById(prescriptionId)).thenReturn(prescription);
+        when(prescriptionMapper.dispense(prescriptionId)).thenReturn(1);
 
         PrescriptionItemDO item1 = PrescriptionItemDO.builder().id(1L).medicineId(1L).quantity(3).build();
         PrescriptionItemDO item2 = PrescriptionItemDO.builder().id(2L).medicineId(2L).quantity(1).build();
@@ -183,24 +181,22 @@ class PrescriptionServiceImplTest {
         // 两个药品都应扣减库存
         verify(medicineService).decrementStock(1L, 3);
         verify(medicineService).decrementStock(2L, 1);
-        // 处方状态应改为"已发药"
-        ArgumentCaptor<PrescriptionDO> captor = ArgumentCaptor.forClass(PrescriptionDO.class);
-        verify(prescriptionMapper).updateById(captor.capture());
-        assertEquals("已发药", captor.getValue().getStatus());
+        // 处方应调用原子 dispense
+        verify(prescriptionMapper).dispense(prescriptionId);
     }
 
     @Test
     void dispensePrescription_alreadyDispensed_shouldSkip() {
         Long prescriptionId = 100L;
-        PrescriptionDO prescription = PrescriptionDO.builder().id(prescriptionId).status("已发药").build();
+        PrescriptionDO prescription = PrescriptionDO.builder().id(prescriptionId)
+                .status(PrescriptionStatusEnum.DISPENSED.getCode()).build();
         when(prescriptionMapper.selectById(prescriptionId)).thenReturn(prescription);
+        when(prescriptionMapper.dispense(prescriptionId)).thenReturn(0);
 
         prescriptionService.dispensePrescription(prescriptionId);
 
         // 不应该扣库存
         verify(medicineService, never()).decrementStock(anyLong(), anyInt());
-        // 不应该更新状态
-        verify(prescriptionMapper, never()).updateById(any(PrescriptionDO.class));
     }
 
     // ==================== getPrescriptionPage (role isolation) ====================

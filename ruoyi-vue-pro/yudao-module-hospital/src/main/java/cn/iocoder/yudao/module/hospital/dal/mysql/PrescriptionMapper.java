@@ -6,6 +6,8 @@ import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionPageReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
@@ -17,5 +19,9 @@ public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
                 .eqIfPresent(PrescriptionDO::getStatus, reqVO.getStatus())
                 .orderByDesc(PrescriptionDO::getId));
     }
+
+    /** 发药（原子 SQL，WHERE status!='已发药' 防止重复发药扣库存） */
+    @Update("UPDATE hospital_prescription SET status = '已发药' WHERE id = #{id} AND status != '已发药'")
+    int dispense(@Param("id") Long id);
 
 }

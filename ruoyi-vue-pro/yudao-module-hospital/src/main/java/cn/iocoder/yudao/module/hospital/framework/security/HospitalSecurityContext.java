@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.DoctorDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PatientDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.DoctorMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PatientMapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,7 +39,7 @@ public class HospitalSecurityContext {
         LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         if (loginUser == null) return null;
         DoctorDO doctor = doctorMapper.selectOne(
-                new QueryWrapper<DoctorDO>().eq("user_id", loginUser.getId()));
+                new LambdaQueryWrapperX<DoctorDO>().eq(DoctorDO::getUserId, loginUser.getId()));
         return doctor != null ? doctor.getId() : null;
     }
 
@@ -50,7 +50,7 @@ public class HospitalSecurityContext {
         LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         if (loginUser == null) return null;
         PatientDO patient = patientMapper.selectOne(
-                new QueryWrapper<PatientDO>().eq("user_id", loginUser.getId()));
+                new LambdaQueryWrapperX<PatientDO>().eq(PatientDO::getUserId, loginUser.getId()));
         return patient != null ? patient.getId() : null;
     }
 

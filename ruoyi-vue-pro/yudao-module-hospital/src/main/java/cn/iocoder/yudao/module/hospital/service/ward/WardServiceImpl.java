@@ -4,21 +4,27 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.hospital.controller.admin.ward.vo.WardPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.ward.vo.WardSaveReqVO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
+import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_CAPACITY_FULL;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_NO_BED_TO_RELEASE;
 
 @Service
 public class WardServiceImpl implements WardService {
 
     @Resource
     private WardMapper wardMapper;
+    @Resource
+    private BedMapper bedMapper;
 
     @Override
     public Long createWard(WardSaveReqVO createReqVO) {
@@ -35,8 +41,11 @@ public class WardServiceImpl implements WardService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteWard(Long id) {
         validateWardExists(id);
+        // 级联删除病房下所有床位，避免孤儿数据
+        bedMapper.delete(BedDO::getWardId, id);
         wardMapper.deleteById(id);
     }
 
@@ -69,7 +78,7 @@ public class WardServiceImpl implements WardService {
         int affected = wardMapper.decrementUsedBeds(wardId);
         if (affected == 0) {
             // 已无已占用床位可释放（used_beds 已为 0 或 ward 不存在）
-            throw exception(WARD_CAPACITY_FULL);
+            throw exception(WARD_NO_BED_TO_RELEASE);
         }
     }
 
