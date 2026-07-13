@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PatientPageReqVO extends PageParam {
+    @Schema(description = "患者ID（用于数据隔离）")
+    private Long id;
     @Schema(description = "患者姓名，模糊匹配")
     private String name;
     @Schema(description = "联系电话")

@@ -7,10 +7,8 @@ import cn.iocoder.yudao.module.hospital.controller.admin.patient.vo.PatientSaveR
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PatientDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PatientMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
-import java.util.Collections;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.PATIENT_NOT_EXISTS;
@@ -50,16 +48,11 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PageResult<PatientDO> getPatientPage(PatientPageReqVO pageReqVO) {
-        // 角色数据隔离：患者只能看到自己的档案
+        // 角色数据隔离：患者只能看到自己的档案，走正常分页
         if (!securityContext.isAdmin()) {
             Long patientId = securityContext.getCurrentPatientId();
             if (patientId != null) {
-                // 患者强制只返回自己的记录
-                PatientDO self = patientMapper.selectById(patientId);
-                if (self != null) {
-                    return new PageResult<>(Collections.singletonList(self), 1L);
-                }
-                return new PageResult<>(Collections.emptyList(), 0L);
+                pageReqVO.setId(patientId);
             }
         }
         return patientMapper.selectPage(pageReqVO);

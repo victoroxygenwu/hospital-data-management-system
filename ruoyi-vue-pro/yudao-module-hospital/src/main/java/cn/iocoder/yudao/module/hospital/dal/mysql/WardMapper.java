@@ -6,6 +6,8 @@ import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.hospital.controller.admin.ward.vo.WardPageReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
 @Mapper
@@ -23,5 +25,19 @@ public interface WardMapper extends BaseMapperX<WardDO> {
     default List<WardDO> selectListByDeptId(Long deptId) {
         return selectList(new LambdaQueryWrapperX<WardDO>().eqIfPresent(WardDO::getDeptId, deptId));
     }
+
+    /**
+     * 原子递增已用床位数（SQL 级原子操作，消除 READ-MODIFY-WRITE 竞态条件）
+     * 同时检查 used_beds < capacity，防止超额分配
+     */
+    @Update("UPDATE hospital_ward SET used_beds = used_beds + 1 WHERE id = #{wardId} AND used_beds < capacity")
+    int incrementUsedBeds(@Param("wardId") Long wardId);
+
+    /**
+     * 原子递减已用床位数
+     * 同时检查 used_beds > 0，防止负数
+     */
+    @Update("UPDATE hospital_ward SET used_beds = used_beds - 1 WHERE id = #{wardId} AND used_beds > 0")
+    int decrementUsedBeds(@Param("wardId") Long wardId);
 
 }

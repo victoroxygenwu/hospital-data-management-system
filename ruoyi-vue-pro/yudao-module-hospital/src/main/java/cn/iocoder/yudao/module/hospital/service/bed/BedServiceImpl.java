@@ -76,8 +76,7 @@ public class BedServiceImpl implements BedService {
         BedDO bed = bedMapper.selectById(bedId);
         if (bed == null) throw exception(BED_NOT_EXISTS);
         if (!"已占用".equals(bed.getStatus())) throw exception(BED_NOT_OCCUPIED);
-        bedMapper.updateById(BedDO.builder().id(bedId).status("空闲")
-                .patientId(null).admissionTime(null).build());
+        bedMapper.releaseBed(bedId);
         wardService.decrementUsedBeds(bed.getWardId());
     }
 

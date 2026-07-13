@@ -13,6 +13,7 @@ public interface PatientMapper extends BaseMapperX<PatientDO> {
     default PageResult<PatientDO> selectPage(PatientPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<PatientDO>()
                 .likeIfPresent(PatientDO::getName, reqVO.getName())
+                .eqIfPresent(PatientDO::getId, reqVO.getId())
                 .likeIfPresent(PatientDO::getPhone, reqVO.getPhone())
                 .likeIfPresent(PatientDO::getIdCard, reqVO.getIdCard())
                 .orderByDesc(PatientDO::getId));

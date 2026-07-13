@@ -8,6 +8,8 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_NOT_EXISTS;
@@ -51,11 +53,15 @@ public class MedicineServiceImpl implements MedicineService {
 
     @Override
     public void decrementStock(Long medicineId, int quantity) {
-        MedicineDO medicine = medicineMapper.selectById(medicineId);
-        if (medicine == null) throw exception(MEDICINE_NOT_EXISTS);
-        if (medicine.getStock() < quantity) throw exception(MEDICINE_STOCK_NOT_ENOUGH);
-        medicineMapper.updateById(MedicineDO.builder().id(medicineId)
-                .stock(medicine.getStock() - quantity).build());
+        int affected = medicineMapper.decrementStock(medicineId, quantity);
+        if (affected == 0) {
+            throw exception(MEDICINE_STOCK_NOT_ENOUGH);
+        }
+    }
+
+    @Override
+    public List<MedicineDO> getMedicineListByIds(Collection<Long> ids) {
+        return medicineMapper.selectListByMedicineIds(ids);
     }
 
     private void validateMedicineExists(Long id) {

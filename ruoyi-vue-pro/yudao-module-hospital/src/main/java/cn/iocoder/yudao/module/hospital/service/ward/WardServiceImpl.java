@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_CAPACITY_FULL;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_NOT_EXISTS;
 
 @Service
@@ -56,19 +57,19 @@ public class WardServiceImpl implements WardService {
 
     @Override
     public void incrementUsedBeds(Long wardId) {
-        WardDO ward = wardMapper.selectById(wardId);
-        if (ward != null) {
-            wardMapper.updateById(WardDO.builder().id(wardId)
-                    .usedBeds(ward.getUsedBeds() + 1).build());
+        int affected = wardMapper.incrementUsedBeds(wardId);
+        if (affected == 0) {
+            // SQL 层已校验 id 存在且 used_beds < capacity，affected=0 即条件不满足
+            throw exception(WARD_CAPACITY_FULL);
         }
     }
 
     @Override
     public void decrementUsedBeds(Long wardId) {
-        WardDO ward = wardMapper.selectById(wardId);
-        if (ward != null && ward.getUsedBeds() > 0) {
-            wardMapper.updateById(WardDO.builder().id(wardId)
-                    .usedBeds(ward.getUsedBeds() - 1).build());
+        int affected = wardMapper.decrementUsedBeds(wardId);
+        if (affected == 0) {
+            // 已无已占用床位可释放（used_beds 已为 0 或 ward 不存在）
+            throw exception(WARD_CAPACITY_FULL);
         }
     }
 

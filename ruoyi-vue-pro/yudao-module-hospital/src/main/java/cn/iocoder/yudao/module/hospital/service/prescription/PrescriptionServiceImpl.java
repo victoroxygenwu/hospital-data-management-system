@@ -14,7 +14,12 @@ import cn.iocoder.yudao.module.hospital.service.medicine.MedicineService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.*;
@@ -36,19 +41,30 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Long createPrescription(PrescriptionSaveReqVO createReqVO) {
         PrescriptionDO prescription = BeanUtils.toBean(createReqVO, PrescriptionDO.class);
         prescriptionMapper.insert(prescription);
-        if (createReqVO.getItems() != null) {
-            for (PrescriptionSaveReqVO.PrescriptionItemSaveVO itemVO : createReqVO.getItems()) {
-                MedicineDO medicine = medicineService.getMedicine(itemVO.getMedicineId());
-                PrescriptionItemDO item = PrescriptionItemDO.builder()
-                        .prescriptionId(prescription.getId())
-                        .medicineId(itemVO.getMedicineId())
-                        .quantity(itemVO.getQuantity())
-                        .price(medicine != null ? medicine.getPrice() : java.math.BigDecimal.ZERO)
-                        .instructions(itemVO.getInstructions())
-                        .build();
-                prescriptionItemMapper.insert(item);
-            }
+        if (createReqVO.getItems() == null || createReqVO.getItems().isEmpty()) {
+            return prescription.getId();
         }
+
+        // 批量查询药品信息（避免 N+1）
+        Set<Long> medicineIds = createReqVO.getItems().stream()
+                .map(PrescriptionSaveReqVO.PrescriptionItemSaveVO::getMedicineId)
+                .collect(Collectors.toSet());
+        Map<Long, MedicineDO> medicineMap = medicineService.getMedicineListByIds(medicineIds).stream()
+                .collect(Collectors.toMap(MedicineDO::getId, m -> m));
+
+        // 批量插入处方明细
+        List<PrescriptionItemDO> items = createReqVO.getItems().stream().map(itemVO -> {
+            MedicineDO medicine = medicineMap.get(itemVO.getMedicineId());
+            return PrescriptionItemDO.builder()
+                    .prescriptionId(prescription.getId())
+                    .medicineId(itemVO.getMedicineId())
+                    .quantity(itemVO.getQuantity())
+                    .price(medicine != null ? medicine.getPrice() : BigDecimal.ZERO)
+                    .instructions(itemVO.getInstructions())
+                    .build();
+        }).collect(Collectors.toList());
+        prescriptionItemMapper.insertBatch(items);
+
         return prescription.getId();
     }
 
@@ -58,22 +74,53 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         validatePrescriptionExists(updateReqVO.getId());
         PrescriptionDO updateObj = BeanUtils.toBean(updateReqVO, PrescriptionDO.class);
         prescriptionMapper.updateById(updateObj);
-        if (updateReqVO.getItems() != null) {
-            List<PrescriptionItemDO> oldItems = prescriptionItemMapper.selectListByPrescriptionId(updateReqVO.getId());
-            for (PrescriptionItemDO oldItem : oldItems) {
+        if (updateReqVO.getItems() == null) return;
+
+        List<PrescriptionItemDO> oldItems = prescriptionItemMapper.selectListByPrescriptionId(updateReqVO.getId());
+        Map<Long, PrescriptionItemDO> oldItemMap = oldItems.stream()
+                .collect(Collectors.toMap(PrescriptionItemDO::getMedicineId, i -> i));
+        Set<Long> newMedicineIds = updateReqVO.getItems().stream()
+                .map(PrescriptionSaveReqVO.PrescriptionItemSaveVO::getMedicineId)
+                .collect(Collectors.toSet());
+
+        // 批量查询所有涉及的药品（避免 N+1）
+        Map<Long, MedicineDO> medicineMap = medicineService.getMedicineListByIds(newMedicineIds).stream()
+                .collect(Collectors.toMap(MedicineDO::getId, m -> m));
+
+        // 1. 删除在新明细中不存在的旧项目
+        for (PrescriptionItemDO oldItem : oldItems) {
+            if (!newMedicineIds.contains(oldItem.getMedicineId())) {
                 prescriptionItemMapper.deleteById(oldItem.getId());
             }
-            for (PrescriptionSaveReqVO.PrescriptionItemSaveVO itemVO : updateReqVO.getItems()) {
-                MedicineDO medicine = medicineService.getMedicine(itemVO.getMedicineId());
-                PrescriptionItemDO item = PrescriptionItemDO.builder()
+        }
+
+        // 2. 更新现有项目 / 收集新项目
+        List<PrescriptionItemDO> newItems = new ArrayList<>();
+        for (PrescriptionSaveReqVO.PrescriptionItemSaveVO itemVO : updateReqVO.getItems()) {
+            MedicineDO medicine = medicineMap.get(itemVO.getMedicineId());
+            BigDecimal price = medicine != null ? medicine.getPrice() : BigDecimal.ZERO;
+
+            if (oldItemMap.containsKey(itemVO.getMedicineId())) {
+                // 仅更新可变字段；prescriptionId/medicineId 由 NOT_NULL 策略保护不覆盖
+                PrescriptionItemDO existing = oldItemMap.get(itemVO.getMedicineId());
+                prescriptionItemMapper.updateById(PrescriptionItemDO.builder()
+                        .id(existing.getId())
+                        .quantity(itemVO.getQuantity())
+                        .price(price)
+                        .instructions(itemVO.getInstructions())
+                        .build());
+            } else {
+                newItems.add(PrescriptionItemDO.builder()
                         .prescriptionId(updateReqVO.getId())
                         .medicineId(itemVO.getMedicineId())
                         .quantity(itemVO.getQuantity())
-                        .price(medicine != null ? medicine.getPrice() : java.math.BigDecimal.ZERO)
+                        .price(price)
                         .instructions(itemVO.getInstructions())
-                        .build();
-                prescriptionItemMapper.insert(item);
+                        .build());
             }
+        }
+        if (!newItems.isEmpty()) {
+            prescriptionItemMapper.insertBatch(newItems);
         }
     }
 
