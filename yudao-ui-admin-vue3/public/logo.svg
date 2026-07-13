@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#409EFF"/>
+      <stop offset="100%" stop-color="#1D6FA0"/>
+    </linearGradient>
+  </defs>
+  <!-- 圆角背景 -->
+  <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#bg)"/>
+  <!-- 医疗十字 -->
+  <rect x="18" y="8" width="12" height="32" rx="3" fill="white" opacity="0.95"/>
+  <rect x="8" y="18" width="32" height="12" rx="3" fill="white" opacity="0.95"/>
+  <!-- 中心心形（体检/健康寓意） -->
+  <path d="M24 28 L24 21 M24 21 C24 19 22 17 20 17 C18 17 16 19 16 21 C16 24 20 27 24 31 C28 27 32 24 32 21 C32 19 30 17 28 17 C26 17 24 19 24 21Z"
+        fill="#67C23A" stroke="white" stroke-width="0.5"/>
+</svg>

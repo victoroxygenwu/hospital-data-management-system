@@ -65,3 +65,4 @@ test_direct_insert.sql
 **/LOG_FILE_IS_UNDEFINED
 CLAUDE.md
 docs/
+.archived/

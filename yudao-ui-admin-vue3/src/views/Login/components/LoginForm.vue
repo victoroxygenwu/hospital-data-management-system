@@ -16,7 +16,7 @@
         </el-form-item>
       </el-col>
       <el-col :span="24" class="px-10px">
-        <el-form-item v-if="loginData.tenantEnable === 'true'" prop="tenantName">
+        <el-form-item v-if="false" prop="tenantName">
           <el-input
             v-model="loginData.loginForm.tenantName"
             :placeholder="t('login.tenantNamePlaceholder')"
@@ -112,7 +112,6 @@ const captchaType = ref('blockPuzzle') // blockPuzzle 滑块 clickWord 点击文
 const getShow = computed(() => unref(getLoginState) === LoginStateEnum.LOGIN)
 
 const LoginRules = {
-  tenantName: [required],
   username: [required],
   password: [required]
 }
@@ -147,12 +146,9 @@ const getCode = async () => {
     verify.value.show()
   }
 }
-// 获取租户 ID
+// 获取租户 ID — 单租户系统，固定为 1
 const getTenantId = async () => {
-  if (loginData.tenantEnable === 'true') {
-    const res = await LoginApi.getTenantIdByName(loginData.loginForm.tenantName)
-    authUtil.setTenantId(res)
-  }
+  authUtil.setTenantId(1)
 }
 // 记住我
 const getLoginFormCache = () => {
@@ -164,17 +160,6 @@ const getLoginFormCache = () => {
       password: loginForm.password ? loginForm.password : loginData.loginForm.password,
       rememberMe: loginForm.rememberMe,
       tenantName: loginForm.tenantName ? loginForm.tenantName : loginData.loginForm.tenantName
-    }
-  }
-}
-// 根据域名，获得租户信息
-const getTenantByWebsite = async () => {
-  if (loginData.tenantEnable === 'true') {
-    const website = location.host
-    const res = await LoginApi.getTenantByWebsite(website)
-    if (res) {
-      loginData.loginForm.tenantName = res.name
-      authUtil.setTenantId(res.id)
     }
   }
 }
@@ -266,7 +251,8 @@ watch(
 )
 onMounted(() => {
   getLoginFormCache()
-  getTenantByWebsite()
+  // 单租户系统，直接固定租户 ID
+  authUtil.setTenantId(1)
 })
 </script>
 

@@ -17,7 +17,7 @@ import { resetRouter } from '@/router'
 import { deleteUserCache } from '@/hooks/web/useCache'
 import { ApiEncrypt } from '@/utils/encrypt'
 
-const tenantEnable = import.meta.env.VITE_APP_TENANT_ENABLE
+const tenantEnable = true // 强制启用多租户
 const { result_code, base_url, request_timeout } = config
 
 // 需要忽略的提示。忽略后，自动 Promise.reject('error')
@@ -60,7 +60,7 @@ service.interceptors.request.use(
       config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token
     }
     // 设置租户
-    if (tenantEnable && tenantEnable === 'true') {
+    if (tenantEnable) {
       const tenantId = getTenantId()
       if (tenantId) config.headers['tenant-id'] = tenantId
       // 只有登录时，才设置 visit-tenant-id 访问租户
