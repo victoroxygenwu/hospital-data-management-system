@@ -34,7 +34,6 @@
         <template #default="{ row }">
           <el-tag v-if="row.status === 0" type="success">空闲</el-tag>
           <el-tag v-else-if="row.status === 1" type="danger">已占用</el-tag>
-          <el-tag v-else-if="row.status === 2" type="warning">维修中</el-tag>
           <el-tag v-else :type="getDictColorType('hospital_bed_status', row.status)">
             {{ getDictLabel('hospital_bed_status', row.status) || '未知(' + row.status + ')' }}
           </el-tag>

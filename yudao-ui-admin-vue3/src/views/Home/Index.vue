@@ -4,7 +4,7 @@
     <div class="welcome-banner">
       <div class="welcome-content">
         <div class="welcome-text">
-          <h1 class="welcome-title">欢迎使用智慧医院管理系统</h1>
+          <h1 class="welcome-title">欢迎使用智能医院管理系统</h1>
           <p class="welcome-subtitle">让医疗服务更高效，让就医体验更便捷</p>
         </div>
         <div class="welcome-illustration">

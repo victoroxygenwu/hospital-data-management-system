@@ -133,7 +133,7 @@ const loginData = reactive({
   },
   loginForm: {
     uuid: '',
-    tenantName: '智慧医院',
+    tenantName: '智能医院',
     mobileNumber: '',
     code: ''
   }

@@ -121,8 +121,7 @@ const loadRegistrationList = async () => {
     const res = await getVisitPage({ ...searchForm, ...pageParams })
     registrationList.value = res.list || []
     total.value = res.total || 0
-  } catch (e) {
-    console.error('加载挂号记录失败', e)
+  } catch {
     ElMessage.error('加载挂号记录失败')
   } finally {
     loading.value = false
@@ -148,8 +147,7 @@ const viewDetail = async (row) => {
     const res = await getVisit(row.id)
     currentRegistration.value = res
     detailVisible.value = true
-  } catch (e) {
-    console.error('获取就诊详情失败', e)
+  } catch {
     ElMessage.error('获取就诊详情失败')
   }
 }

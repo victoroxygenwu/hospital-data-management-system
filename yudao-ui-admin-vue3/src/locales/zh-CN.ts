@@ -114,8 +114,8 @@ export default {
     small: '小'
   },
   login: {
-    welcome: '欢迎使用医院管理系统',
-    message: '高效便捷的医院病人数据管理平台',
+    welcome: '欢迎使用智能医院管理系统',
+    message: '高效便捷的智能医院管理系统',
     tenantname: '租户名称',
     username: '用户名',
     password: '密码',
@@ -374,7 +374,7 @@ export default {
       qrSignInFormTitle: '二维码登录',
       signUpFormTitle: '注册',
       forgetFormTitle: '重置密码',
-      signInTitle: '医院病人数据管理系统',
+      signInTitle: '智能医院管理系统',
       signInDesc: '输入您的个人详细信息开始使用！',
       policy: '我同意xxx隐私政策',
       scanSign: `扫码后点击"确认"，即可完成登录`,

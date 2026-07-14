@@ -162,8 +162,7 @@ const loadVisitList = async () => {
     const res = await getVisitPage({ ...searchForm, ...pageParams })
     visitList.value = res.list || []
     total.value = res.total || 0
-  } catch (e) {
-    console.error('加载就诊记录失败', e)
+  } catch {
     ElMessage.error('加载就诊记录失败')
   } finally {
     loading.value = false
@@ -190,8 +189,7 @@ const viewDetail = async (row) => {
     const res = await getVisit(row.id)
     currentVisit.value = res
     detailVisible.value = true
-  } catch (e) {
-    console.error('获取就诊详情失败', e)
+  } catch {
     ElMessage.error('获取就诊详情失败')
   }
 }
@@ -230,8 +228,7 @@ const submitCreate = async () => {
     ElMessage.success('挂号成功！')
     createDialogVisible.value = false
     loadVisitList()
-  } catch (e) {
-    console.error('挂号失败', e)
+  } catch {
     ElMessage.error('挂号失败，请重试')
   } finally {
     creating.value = false

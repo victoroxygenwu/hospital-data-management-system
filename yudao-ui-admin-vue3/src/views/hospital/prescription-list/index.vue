@@ -97,8 +97,7 @@ const loadPrescriptionList = async () => {
     const res = await getPrescriptionPage({ ...searchForm, ...pageParams })
     prescriptionList.value = res.list || []
     total.value = res.total || 0
-  } catch (e) {
-    console.error('加载处方列表失败', e)
+  } catch {
     ElMessage.error('加载处方列表失败')
   } finally { loading.value = false }
 }

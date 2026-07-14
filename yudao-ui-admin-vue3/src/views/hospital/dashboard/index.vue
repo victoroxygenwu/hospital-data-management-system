@@ -307,8 +307,7 @@ const loadStats = async () => {
         value: item.visitCount || item.value || 0
       }))
     }
-  } catch (e) {
-    console.warn('加载统计数据失败，使用默认值', e)
+  } catch {
     // 接口失败时使用默认值
     stats.value = { todayVisits: 0, totalBeds: 0, usedBeds: 0, todayIncome: 0 }
   }
