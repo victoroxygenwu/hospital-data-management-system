@@ -3,9 +3,10 @@ import request from '@/config/axios'
 export interface WardVO {
   id: number
   deptId: number
-  name: string
-  wardType: string
-  floor: number
+  wardNo: string
+  type: string
+  capacity: number
+  usedBeds: number
   createTime: Date
 }
 

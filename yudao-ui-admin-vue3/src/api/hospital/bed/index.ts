@@ -3,7 +3,7 @@ import request from '@/config/axios'
 export interface BedVO {
   id: number
   wardId: number
-  bedNumber: string
+  bedNo: string
   status: number
   patientId: number
   createTime: Date

@@ -5,8 +5,10 @@ export interface DoctorVO {
   name: string
   deptId: number
   title: string
+  gender: number
   phone: string
-  status: number
+  email: string
+  licenseNo: string
   createTime: Date
 }
 

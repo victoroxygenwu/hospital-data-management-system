@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+import java.util.List;
 
 @Mapper
 public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
@@ -20,8 +21,17 @@ public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
                 .orderByDesc(PrescriptionDO::getId));
     }
 
-    /** 发药（原子 SQL，WHERE status!='已发药' 防止重复发药扣库存） */
-    @Update("UPDATE hospital_prescription SET status = '已发药' WHERE id = #{id} AND status != '已发药'")
+    /** 患者维度过滤：按就诊ID列表查处方 */
+    default PageResult<PrescriptionDO> selectPageByVisitIds(PrescriptionPageReqVO reqVO, List<Long> visitIds) {
+        return selectPage(reqVO, new LambdaQueryWrapperX<PrescriptionDO>()
+                .in(PrescriptionDO::getVisitId, visitIds)
+                .eqIfPresent(PrescriptionDO::getDoctorId, reqVO.getDoctorId())
+                .eqIfPresent(PrescriptionDO::getStatus, reqVO.getStatus())
+                .orderByDesc(PrescriptionDO::getId));
+    }
+
+    /** 发药（原子 SQL，WHERE status=0 待发药 防止重复发药扣库存） */
+    @Update("UPDATE hospital_prescription SET status = 1 WHERE id = #{id} AND status = 0")
     int dispense(@Param("id") Long id);
 
 }

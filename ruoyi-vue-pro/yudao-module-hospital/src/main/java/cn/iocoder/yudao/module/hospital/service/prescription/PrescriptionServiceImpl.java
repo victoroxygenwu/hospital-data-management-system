@@ -7,10 +7,13 @@ import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.Prescri
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.module.hospital.service.medicine.MedicineService;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
@@ -31,6 +34,8 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     private PrescriptionMapper prescriptionMapper;
     @Resource
     private PrescriptionItemMapper prescriptionItemMapper;
+    @Resource
+    private VisitMapper visitMapper;
     @Resource
     private MedicineService medicineService;
     @Resource
@@ -144,6 +149,18 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             Long doctorId = securityContext.getCurrentDoctorId();
             if (doctorId != null) {
                 pageReqVO.setDoctorId(doctorId);
+            } else {
+                Long patientId = securityContext.getCurrentPatientId();
+                if (patientId != null) {
+                    // 患者只看到与自己就诊关联的处方
+                    List<VisitDO> visits = visitMapper.selectList(
+                            new LambdaQueryWrapperX<VisitDO>().eq(VisitDO::getPatientId, patientId));
+                    if (visits.isEmpty()) {
+                        return PageResult.empty();
+                    }
+                    List<Long> visitIds = visits.stream().map(VisitDO::getId).collect(Collectors.toList());
+                    return prescriptionMapper.selectPageByVisitIds(pageReqVO, visitIds);
+                }
             }
         }
         return prescriptionMapper.selectPage(pageReqVO);

@@ -4,9 +4,8 @@ export interface BillVO {
   id: number
   patientId: number
   visitId: number
-  prescriptionId: number
   totalAmount: number
-  payStatus: number
+  status: number
   payMethod: string
   payTime: Date
   createTime: Date

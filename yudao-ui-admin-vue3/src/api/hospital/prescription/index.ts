@@ -5,20 +5,15 @@ export interface PrescriptionItemVO {
   prescriptionId: number
   medicineId: number
   quantity: number
-  usage: string
-  dosage: string
-  frequency: string
-  days: number
-  remark: string
+  price: number
+  instructions: string
 }
 
 export interface PrescriptionVO {
   id: number
   visitId: number
-  patientId: number
   doctorId: number
   status: number
-  diagnosis: string
   items: PrescriptionItemVO[]
   createTime: Date
 }
