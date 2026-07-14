@@ -48,7 +48,7 @@ hospital-data-management-system/
 │   ├── mysql/                         # MySQL 建表 & 初始数据
 │   └── db2/                           # OpenGauss 建表 & 初始数据
 └── 文档/                              # 项目文档
-    ├── 医院病人数据管理系统-总体设计文档.md
+    ├── 智能医院管理系统-总体设计文档.md
     ├── 系统扩展功能设计文档.md
     ├── 启动与测试指南.md
     └── 项目设计展示.html
@@ -58,7 +58,7 @@ hospital-data-management-system/
 
 | 文档 | 说明 |
 |------|------|
-| [总体设计文档](文档/医院病人数据管理系统-总体设计文档.md) | 系统架构、ER 图、表结构、模块设计 |
+| [总体设计文档](文档/智能医院管理系统-总体设计文档.md) | 系统架构、ER 图、表结构、模块设计 |
 | [扩展功能设计](文档/系统扩展功能设计文档.md) | 知识图谱、AI 辅助诊疗等扩展功能设计 |
 | [启动与测试指南](文档/启动与测试指南.md) | 环境搭建、项目启动、本地开发配置 |
 | [设计展示](文档/项目设计展示.html) | 项目设计概览的 HTML 展示页面 |
@@ -67,7 +67,7 @@ hospital-data-management-system/
 
 > 详见 [启动与测试指南](文档/启动与测试指南.md)
 
-**环境要求**：JDK 8+ / Maven 3.8+ / Docker（OpenGauss + Redis 或本地 MySQL）/ Node 16+
+**环境要求**：JDK 21 (LTS，兼容 8+) / Maven 3.8+ / Docker（OpenGauss + Redis 或本地 MySQL）/ Node 16+
 
 ```bash
 # 1. 启动数据库和缓存
