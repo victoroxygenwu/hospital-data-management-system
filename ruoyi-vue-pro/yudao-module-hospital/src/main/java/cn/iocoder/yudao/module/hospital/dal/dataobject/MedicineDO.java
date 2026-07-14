@@ -16,9 +16,12 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 药品 DO */
 public class MedicineDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 药品名称 */
     private String name;
     private String specification;
     private String unit;

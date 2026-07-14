@@ -8,9 +8,11 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.DoctorDO;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
+/** 医生 Mapper */
 @Mapper
 public interface DoctorMapper extends BaseMapperX<DoctorDO> {
 
+    /** 分页查询 */
     default PageResult<DoctorDO> selectPage(DoctorPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<DoctorDO>()
                 .likeIfPresent(DoctorDO::getName, reqVO.getName())
@@ -19,6 +21,7 @@ public interface DoctorMapper extends BaseMapperX<DoctorDO> {
                 .orderByDesc(DoctorDO::getId));
     }
 
+    /** 按科室ID查询医生列表 */
     default List<DoctorDO> selectListByDeptId(Long deptId) {
         return selectList(DoctorDO::getDeptId, deptId);
     }

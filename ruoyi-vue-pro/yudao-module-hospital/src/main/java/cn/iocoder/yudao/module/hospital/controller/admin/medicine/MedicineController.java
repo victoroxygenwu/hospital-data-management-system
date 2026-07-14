@@ -17,6 +17,9 @@ import javax.validation.Valid;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 药品管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 药品管理")
 @RestController
 @RequestMapping("/hospital/medicine")
@@ -24,8 +27,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class MedicineController {
 
     @Resource
-    private MedicineService medicineService;
+    private MedicineService medicineService; // 药品 Service
 
+    /**
+     * 创建药品
+     */
     @PostMapping("/create")
     @Operation(summary = "创建药品")
     @PreAuthorize("@ss.hasPermission('hospital:medicine:create')")
@@ -33,6 +39,9 @@ public class MedicineController {
         return success(medicineService.createMedicine(createReqVO));
     }
 
+    /**
+     * 修改药品
+     */
     @PutMapping("/update")
     @Operation(summary = "修改药品")
     @PreAuthorize("@ss.hasPermission('hospital:medicine:update')")
@@ -41,6 +50,9 @@ public class MedicineController {
         return success(true);
     }
 
+    /**
+     * 删除药品
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除药品")
     @Parameter(name = "id", description = "药品ID", required = true)
@@ -50,6 +62,9 @@ public class MedicineController {
         return success(true);
     }
 
+    /**
+     * 获取药品详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取药品详情")
     @Parameter(name = "id", description = "药品ID", required = true)
@@ -59,6 +74,9 @@ public class MedicineController {
         return success(BeanUtils.toBean(medicine, MedicineRespVO.class));
     }
 
+    /**
+     * 获取药品分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取药品分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:medicine:query')")

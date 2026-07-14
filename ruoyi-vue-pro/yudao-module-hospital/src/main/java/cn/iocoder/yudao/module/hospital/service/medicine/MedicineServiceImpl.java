@@ -16,14 +16,22 @@ import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionU
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_NOT_EXISTS;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_STOCK_NOT_ENOUGH;
 
+/**
+ * 药品 Service 实现类
+ */
 @Service
 public class MedicineServiceImpl implements MedicineService {
 
     @Resource
-    private MedicineMapper medicineMapper;
+    private MedicineMapper medicineMapper; // 药品数据访问
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
+    /**
+     * 创建药品
+     * @param createReqVO 创建请求
+     * @return 新药品ID
+     */
     @Override
     public Long createMedicine(MedicineSaveReqVO createReqVO) {
         securityContext.requireAdmin();
@@ -32,6 +40,10 @@ public class MedicineServiceImpl implements MedicineService {
         return medicine.getId();
     }
 
+    /**
+     * 更新药品
+     * @param updateReqVO 更新请求
+     */
     @Override
     public void updateMedicine(MedicineSaveReqVO updateReqVO) {
         securityContext.requireAdmin();
@@ -40,6 +52,10 @@ public class MedicineServiceImpl implements MedicineService {
         medicineMapper.updateById(updateObj);
     }
 
+    /**
+     * 删除药品
+     * @param id 药品ID
+     */
     @Override
     public void deleteMedicine(Long id) {
         securityContext.requireAdmin();
@@ -47,16 +63,31 @@ public class MedicineServiceImpl implements MedicineService {
         medicineMapper.deleteById(id);
     }
 
+    /**
+     * 查询药品
+     * @param id 药品ID
+     * @return 药品信息
+     */
     @Override
     public MedicineDO getMedicine(Long id) {
         return medicineMapper.selectById(id);
     }
 
+    /**
+     * 分页查询药品
+     * @param pageReqVO 分页请求
+     * @return 药品分页结果
+     */
     @Override
     public PageResult<MedicineDO> getMedicinePage(MedicinePageReqVO pageReqVO) {
         return medicineMapper.selectPage(pageReqVO);
     }
 
+    /**
+     * 扣减库存（原子操作：WHERE stock>=quantity 防止超卖）
+     * @param medicineId 药品ID
+     * @param quantity 扣减数量
+     */
     @Override
     public void decrementStock(Long medicineId, int quantity) {
         int affected = medicineMapper.decrementStock(medicineId, quantity);
@@ -65,6 +96,11 @@ public class MedicineServiceImpl implements MedicineService {
         }
     }
 
+    /**
+     * 批量查询药品
+     * @param ids 药品ID集合
+     * @return 药品列表
+     */
     @Override
     public List<MedicineDO> getMedicineListByIds(Collection<Long> ids) {
         return medicineMapper.selectListByMedicineIds(ids);

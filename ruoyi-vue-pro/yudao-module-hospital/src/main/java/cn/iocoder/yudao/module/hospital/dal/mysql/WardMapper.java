@@ -10,9 +10,11 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
+/** 病区 Mapper */
 @Mapper
 public interface WardMapper extends BaseMapperX<WardDO> {
 
+    /** 分页查询 */
     default PageResult<WardDO> selectPage(WardPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<WardDO>()
                 .eqIfPresent(WardDO::getDeptId, reqVO.getDeptId())
@@ -22,6 +24,7 @@ public interface WardMapper extends BaseMapperX<WardDO> {
                 .orderByDesc(WardDO::getId));
     }
 
+    /** 按科室ID查询病区列表 */
     default List<WardDO> selectListByDeptId(Long deptId) {
         return selectList(WardDO::getDeptId, deptId);
     }

@@ -7,9 +7,11 @@ import cn.iocoder.yudao.module.hospital.controller.admin.department.vo.Departmen
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DepartmentDO;
 import org.apache.ibatis.annotations.Mapper;
 
+/** 科室 Mapper */
 @Mapper
 public interface DepartmentMapper extends BaseMapperX<DepartmentDO> {
 
+    /** 分页查询 */
     default PageResult<DepartmentDO> selectPage(DepartmentPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<DepartmentDO>()
                 .likeIfPresent(DepartmentDO::getDeptName, reqVO.getDeptName())

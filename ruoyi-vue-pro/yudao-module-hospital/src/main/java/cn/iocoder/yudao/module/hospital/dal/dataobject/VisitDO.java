@@ -15,15 +15,21 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 就诊记录 DO */
 public class VisitDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 患者ID */
     private Long patientId;
+    /** 就诊医生ID */
     private Long doctorId;
+    /** 就诊科室ID */
     private Long deptId;
     private LocalDateTime visitDate;
     private String reason;
     private String diagnosis;
     private String notes;
+    /** 就诊状态 */
     private String status;
 }

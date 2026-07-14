@@ -21,6 +21,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 病人管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 病人管理")
 @RestController
 @RequestMapping("/hospital/patient")
@@ -28,10 +31,13 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class PatientController {
 
     @Resource
-    private PatientService patientService;
+    private PatientService patientService; // 病人 Service
     @Resource
-    private VisitService visitService;
+    private VisitService visitService; // 就诊 Service
 
+    /**
+     * 创建病人
+     */
     @PostMapping("/create")
     @Operation(summary = "创建病人")
     @PreAuthorize("@ss.hasPermission('hospital:patient:create')")
@@ -39,6 +45,9 @@ public class PatientController {
         return success(patientService.createPatient(createReqVO));
     }
 
+    /**
+     * 修改病人
+     */
     @PutMapping("/update")
     @Operation(summary = "修改病人")
     @PreAuthorize("@ss.hasPermission('hospital:patient:update')")
@@ -47,6 +56,9 @@ public class PatientController {
         return success(true);
     }
 
+    /**
+     * 删除病人
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除病人")
     @Parameter(name = "id", description = "病人ID", required = true)
@@ -56,6 +68,9 @@ public class PatientController {
         return success(true);
     }
 
+    /**
+     * 获取病人详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取病人详情")
     @Parameter(name = "id", description = "病人ID", required = true)
@@ -65,6 +80,9 @@ public class PatientController {
         return success(BeanUtils.toBean(patient, PatientRespVO.class));
     }
 
+    /**
+     * 获取病人分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取病人分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:patient:query')")
@@ -73,6 +91,9 @@ public class PatientController {
         return success(BeanUtils.toBean(pageResult, PatientRespVO.class));
     }
 
+    /**
+     * 获取病人的就诊记录
+     */
     @GetMapping("/{id}/visits")
     @Operation(summary = "获取病人的就诊记录")
     @Parameter(name = "id", description = "病人ID", required = true)

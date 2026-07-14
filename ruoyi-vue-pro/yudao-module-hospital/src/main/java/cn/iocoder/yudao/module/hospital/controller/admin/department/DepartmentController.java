@@ -18,6 +18,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 科室管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 科室管理")
 @RestController
 @RequestMapping("/hospital/department")
@@ -25,8 +28,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class DepartmentController {
 
     @Resource
-    private DepartmentService departmentService;
+    private DepartmentService departmentService; // 科室 Service
 
+    /**
+     * 创建科室
+     */
     @PostMapping("/create")
     @Operation(summary = "创建科室")
     @PreAuthorize("@ss.hasPermission('hospital:department:create')")
@@ -34,6 +40,9 @@ public class DepartmentController {
         return success(departmentService.createDepartment(createReqVO));
     }
 
+    /**
+     * 修改科室
+     */
     @PutMapping("/update")
     @Operation(summary = "修改科室")
     @PreAuthorize("@ss.hasPermission('hospital:department:update')")
@@ -42,6 +51,9 @@ public class DepartmentController {
         return success(true);
     }
 
+    /**
+     * 删除科室
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除科室")
     @Parameter(name = "id", description = "科室ID", required = true)
@@ -51,6 +63,9 @@ public class DepartmentController {
         return success(true);
     }
 
+    /**
+     * 获取科室详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取科室详情")
     @Parameter(name = "id", description = "科室ID", required = true)
@@ -60,6 +75,9 @@ public class DepartmentController {
         return success(BeanUtils.toBean(department, DepartmentRespVO.class));
     }
 
+    /**
+     * 获取科室分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取科室分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:department:query')")
@@ -68,6 +86,9 @@ public class DepartmentController {
         return success(BeanUtils.toBean(pageResult, DepartmentRespVO.class));
     }
 
+    /**
+     * 获取科室全列表（下拉选择用）
+     */
     @GetMapping("/list-all")
     @Operation(summary = "获取科室全列表（下拉选择用）")
     @PreAuthorize("@ss.hasPermission('hospital:department:query')")

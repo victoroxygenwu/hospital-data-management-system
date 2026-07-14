@@ -21,6 +21,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 病房管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 病房管理")
 @RestController
 @RequestMapping("/hospital/ward")
@@ -28,10 +31,13 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class WardController {
 
     @Resource
-    private WardService wardService;
+    private WardService wardService; // 病房 Service
     @Resource
-    private BedService bedService;
+    private BedService bedService; // 床位 Service
 
+    /**
+     * 创建病房
+     */
     @PostMapping("/create")
     @Operation(summary = "创建病房")
     @PreAuthorize("@ss.hasPermission('hospital:ward:create')")
@@ -39,6 +45,9 @@ public class WardController {
         return success(wardService.createWard(createReqVO));
     }
 
+    /**
+     * 修改病房
+     */
     @PutMapping("/update")
     @Operation(summary = "修改病房")
     @PreAuthorize("@ss.hasPermission('hospital:ward:update')")
@@ -47,6 +56,9 @@ public class WardController {
         return success(true);
     }
 
+    /**
+     * 删除病房
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除病房")
     @Parameter(name = "id", description = "病房ID", required = true)
@@ -56,6 +68,9 @@ public class WardController {
         return success(true);
     }
 
+    /**
+     * 获取病房详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取病房详情")
     @Parameter(name = "id", description = "病房ID", required = true)
@@ -65,6 +80,9 @@ public class WardController {
         return success(BeanUtils.toBean(ward, WardRespVO.class));
     }
 
+    /**
+     * 获取病房分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取病房分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:ward:query')")
@@ -73,6 +91,9 @@ public class WardController {
         return success(BeanUtils.toBean(pageResult, WardRespVO.class));
     }
 
+    /**
+     * 获取某科室下的病房列表
+     */
     @GetMapping("/list-by-dept")
     @Operation(summary = "获取某科室下的病房列表")
     @PreAuthorize("@ss.hasPermission('hospital:ward:query')")
@@ -82,6 +103,9 @@ public class WardController {
         return success(BeanUtils.toBean(list, WardRespVO.class));
     }
 
+    /**
+     * 获取病房下的床位列表
+     */
     @GetMapping("/{id}/beds")
     @Operation(summary = "获取病房下的床位列表")
     @Parameter(name = "id", description = "病房ID", required = true)

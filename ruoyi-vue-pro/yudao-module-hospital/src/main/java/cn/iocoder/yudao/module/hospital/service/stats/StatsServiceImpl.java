@@ -20,21 +20,30 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 统计 Service 实现类
+ */
 @Service
 public class StatsServiceImpl implements StatsService {
 
     private static final int STOCK_WARNING_THRESHOLD = 10;
 
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
     @Resource
-    private VisitMapper visitMapper;
+    private VisitMapper visitMapper; // 就诊数据访问
     @Resource
-    private WardMapper wardMapper;
+    private WardMapper wardMapper; // 病房数据访问
     @Resource
-    private MedicineMapper medicineMapper;
+    private MedicineMapper medicineMapper; // 药品数据访问
 
+    /**
+     * 就诊趋势统计（仅管理员可查看）
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 就诊趋势列表
+     */
     @Override
     public List<VisitTrendVO> getVisitTrend(String startDate, String endDate) {
         if (!securityContext.isAdmin()) {
@@ -52,6 +61,10 @@ public class StatsServiceImpl implements StatsService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 病房使用率统计（仅管理员可查看）
+     * @return 病房使用情况列表
+     */
     @Override
     public List<WardUsageVO> getWardUsage() {
         if (!securityContext.isAdmin()) {
@@ -68,6 +81,10 @@ public class StatsServiceImpl implements StatsService {
                 .build()).collect(Collectors.toList());
     }
 
+    /**
+     * 药品库存统计（仅管理员可查看，库存低于阈值标记预警）
+     * @return 药品库存列表
+     */
     @Override
     public List<MedicineStockVO> getMedicineStock() {
         if (!securityContext.isAdmin()) {

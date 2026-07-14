@@ -17,6 +17,9 @@ import javax.validation.Valid;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 就诊管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 就诊管理")
 @RestController
 @RequestMapping("/hospital/visit")
@@ -24,8 +27,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class VisitController {
 
     @Resource
-    private VisitService visitService;
+    private VisitService visitService; // 就诊 Service
 
+    /**
+     * 创建就诊记录
+     */
     @PostMapping("/create")
     @Operation(summary = "创建就诊记录")
     @PreAuthorize("@ss.hasPermission('hospital:visit:create')")
@@ -33,6 +39,9 @@ public class VisitController {
         return success(visitService.createVisit(createReqVO));
     }
 
+    /**
+     * 修改就诊记录
+     */
     @PutMapping("/update")
     @Operation(summary = "修改就诊记录")
     @PreAuthorize("@ss.hasPermission('hospital:visit:update')")
@@ -41,6 +50,9 @@ public class VisitController {
         return success(true);
     }
 
+    /**
+     * 删除就诊记录
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除就诊记录")
     @Parameter(name = "id", description = "就诊ID", required = true)
@@ -50,6 +62,9 @@ public class VisitController {
         return success(true);
     }
 
+    /**
+     * 获取就诊详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取就诊详情")
     @Parameter(name = "id", description = "就诊ID", required = true)
@@ -59,6 +74,9 @@ public class VisitController {
         return success(BeanUtils.toBean(visit, VisitRespVO.class));
     }
 
+    /**
+     * 获取就诊分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取就诊分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:visit:query')")

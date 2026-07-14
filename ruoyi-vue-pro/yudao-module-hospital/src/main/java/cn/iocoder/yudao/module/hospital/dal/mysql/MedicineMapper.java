@@ -12,9 +12,11 @@ import org.apache.ibatis.annotations.Update;
 import java.util.Collection;
 import java.util.List;
 
+/** 药品 Mapper */
 @Mapper
 public interface MedicineMapper extends BaseMapperX<MedicineDO> {
 
+    /** 分页查询 */
     default PageResult<MedicineDO> selectPage(MedicinePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<MedicineDO>()
                 .likeIfPresent(MedicineDO::getName, reqVO.getName())

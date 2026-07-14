@@ -27,20 +27,28 @@ import java.util.stream.Collectors;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.*;
 
+/**
+ * 处方 Service 实现类
+ */
 @Service
 public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Resource
-    private PrescriptionMapper prescriptionMapper;
+    private PrescriptionMapper prescriptionMapper; // 处方数据访问
     @Resource
-    private PrescriptionItemMapper prescriptionItemMapper;
+    private PrescriptionItemMapper prescriptionItemMapper; // 处方明细数据访问
     @Resource
-    private VisitMapper visitMapper;
+    private VisitMapper visitMapper; // 就诊数据访问
     @Resource
-    private MedicineService medicineService;
+    private MedicineService medicineService; // 药品服务
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
+    /**
+     * 创建处方（含处方明细批量插入）
+     * @param createReqVO 创建请求
+     * @return 新处方ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createPrescription(PrescriptionSaveReqVO createReqVO) {
@@ -72,6 +80,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         return prescription.getId();
     }
 
+    /**
+     * 更新处方（含处方明细的增删改差异化处理）
+     * @param updateReqVO 更新请求
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePrescription(PrescriptionSaveReqVO updateReqVO) {
@@ -129,6 +141,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
     }
 
+    /**
+     * 删除处方（级联删除处方明细）
+     * @param id 处方ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deletePrescription(Long id) {
@@ -138,11 +154,21 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         prescriptionMapper.deleteById(id);
     }
 
+    /**
+     * 查询处方
+     * @param id 处方ID
+     * @return 处方信息
+     */
     @Override
     public PrescriptionDO getPrescription(Long id) {
         return prescriptionMapper.selectById(id);
     }
 
+    /**
+     * 分页查询处方（角色数据隔离：医生看自己开具的，患者看自己就诊关联的）
+     * @param pageReqVO 分页请求
+     * @return 处方分页结果
+     */
     @Override
     public PageResult<PrescriptionDO> getPrescriptionPage(PrescriptionPageReqVO pageReqVO) {
         if (!securityContext.isAdmin()) {
@@ -166,12 +192,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         return prescriptionMapper.selectPage(pageReqVO);
     }
 
+    /**
+     * 发药（原子操作：WHERE status=0 防止并发重复发药，同时扣减药品库存）
+     * @param id 处方ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void dispensePrescription(Long id) {
         PrescriptionDO prescription = prescriptionMapper.selectById(id);
         if (prescription == null) throw exception(PRESCRIPTION_NOT_EXISTS);
-        // 原子状态更新：WHERE status!='已发药' 防止并发重复发药
+        // 原子状态更新：WHERE status=0 防止并发重复发药
         int affected = prescriptionMapper.dispense(id);
         if (affected == 0) return; // 已发药，幂等返回
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(id);
@@ -180,6 +210,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
     }
 
+    /**
+     * 查询处方明细列表
+     * @param prescriptionId 处方ID
+     * @return 处方明细列表
+     */
     @Override
     public List<PrescriptionItemDO> getPrescriptionItems(Long prescriptionId) {
         return prescriptionItemMapper.selectListByPrescriptionId(prescriptionId);

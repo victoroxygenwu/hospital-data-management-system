@@ -7,9 +7,11 @@ import cn.iocoder.yudao.module.hospital.controller.admin.patient.vo.PatientPageR
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PatientDO;
 import org.apache.ibatis.annotations.Mapper;
 
+/** 患者 Mapper */
 @Mapper
 public interface PatientMapper extends BaseMapperX<PatientDO> {
 
+    /** 分页查询 */
     default PageResult<PatientDO> selectPage(PatientPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<PatientDO>()
                 .likeIfPresent(PatientDO::getName, reqVO.getName())

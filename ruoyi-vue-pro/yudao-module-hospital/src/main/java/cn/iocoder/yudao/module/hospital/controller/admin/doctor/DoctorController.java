@@ -18,6 +18,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 医生管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 医生管理")
 @RestController
 @RequestMapping("/hospital/doctor")
@@ -25,8 +28,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class DoctorController {
 
     @Resource
-    private DoctorService doctorService;
+    private DoctorService doctorService; // 医生 Service
 
+    /**
+     * 创建医生
+     */
     @PostMapping("/create")
     @Operation(summary = "创建医生")
     @PreAuthorize("@ss.hasPermission('hospital:doctor:create')")
@@ -34,6 +40,9 @@ public class DoctorController {
         return success(doctorService.createDoctor(createReqVO));
     }
 
+    /**
+     * 修改医生
+     */
     @PutMapping("/update")
     @Operation(summary = "修改医生")
     @PreAuthorize("@ss.hasPermission('hospital:doctor:update')")
@@ -42,6 +51,9 @@ public class DoctorController {
         return success(true);
     }
 
+    /**
+     * 删除医生
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除医生")
     @Parameter(name = "id", description = "医生ID", required = true)
@@ -51,6 +63,9 @@ public class DoctorController {
         return success(true);
     }
 
+    /**
+     * 获取医生详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取医生详情")
     @Parameter(name = "id", description = "医生ID", required = true)
@@ -60,6 +75,9 @@ public class DoctorController {
         return success(BeanUtils.toBean(doctor, DoctorRespVO.class));
     }
 
+    /**
+     * 获取医生分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取医生分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:doctor:query')")
@@ -68,6 +86,9 @@ public class DoctorController {
         return success(BeanUtils.toBean(pageResult, DoctorRespVO.class));
     }
 
+    /**
+     * 获取某科室下的医生列表
+     */
     @GetMapping("/list-by-dept")
     @Operation(summary = "获取某科室下的医生列表")
     @PreAuthorize("@ss.hasPermission('hospital:doctor:query')")

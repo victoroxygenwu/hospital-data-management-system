@@ -19,6 +19,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 处方管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 处方管理")
 @RestController
 @RequestMapping("/hospital/prescription")
@@ -26,8 +29,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class PrescriptionController {
 
     @Resource
-    private PrescriptionService prescriptionService;
+    private PrescriptionService prescriptionService; // 处方 Service
 
+    /**
+     * 创建处方
+     */
     @PostMapping("/create")
     @Operation(summary = "创建处方")
     @PreAuthorize("@ss.hasPermission('hospital:prescription:create')")
@@ -35,6 +41,9 @@ public class PrescriptionController {
         return success(prescriptionService.createPrescription(createReqVO));
     }
 
+    /**
+     * 修改处方
+     */
     @PutMapping("/update")
     @Operation(summary = "修改处方")
     @PreAuthorize("@ss.hasPermission('hospital:prescription:update')")
@@ -43,6 +52,9 @@ public class PrescriptionController {
         return success(true);
     }
 
+    /**
+     * 删除处方
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除处方")
     @Parameter(name = "id", description = "处方ID", required = true)
@@ -52,6 +64,9 @@ public class PrescriptionController {
         return success(true);
     }
 
+    /**
+     * 获取处方详情（含明细）
+     */
     @GetMapping("/get")
     @Operation(summary = "获取处方详情（含明细）")
     @Parameter(name = "id", description = "处方ID", required = true)
@@ -66,6 +81,9 @@ public class PrescriptionController {
         return success(respVO);
     }
 
+    /**
+     * 获取处方分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取处方分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:prescription:query')")
@@ -74,6 +92,9 @@ public class PrescriptionController {
         return success(BeanUtils.toBean(pageResult, PrescriptionRespVO.class));
     }
 
+    /**
+     * 发药
+     */
     @PutMapping("/dispense")
     @Operation(summary = "发药")
     @Parameter(name = "id", description = "处方ID", required = true)

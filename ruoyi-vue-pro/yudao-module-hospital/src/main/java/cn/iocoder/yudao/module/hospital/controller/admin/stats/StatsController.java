@@ -15,6 +15,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 数据统计分析 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 数据统计分析")
 @RestController
 @RequestMapping("/hospital/stats")
@@ -22,8 +25,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class StatsController {
 
     @Resource
-    private StatsService statsService;
+    private StatsService statsService; // 统计分析 Service
 
+    /**
+     * 就诊趋势统计
+     */
     @GetMapping("/visit-trend")
     @Operation(summary = "就诊趋势统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
@@ -33,6 +39,9 @@ public class StatsController {
         return success(statsService.getVisitTrend(startDate, endDate));
     }
 
+    /**
+     * 床位使用率统计
+     */
     @GetMapping("/ward-usage")
     @Operation(summary = "床位使用率统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
@@ -40,6 +49,9 @@ public class StatsController {
         return success(statsService.getWardUsage());
     }
 
+    /**
+     * 药品库存统计
+     */
     @GetMapping("/medicine-stock")
     @Operation(summary = "药品库存统计")
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")

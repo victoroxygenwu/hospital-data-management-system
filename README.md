@@ -10,7 +10,7 @@
 
 | 模块 | 功能 |
 |------|------|
-| **用户管理** | 管理员/医生/患者三种角色，基于角色的权限隔离 |
+| **用户管理** | 管理员/医生/患者三种角色，菜单级 + 数据级权限隔离 |
 | **科室管理** | 科室增删改查，关联医生和病房 |
 | **医生管理** | 医生信息维护、归属科室 |
 | **患者管理** | 患者档案、就诊历史 |
@@ -27,7 +27,7 @@
 |------|------|
 | 前端 | Vue 3 + Element Plus + yudao-ui-admin-vue3 |
 | 后端 | Spring Boot 2.7 + MyBatis-Plus + RuoYi-vue-pro |
-| 数据库 | OpenGauss（华为，兼容 PostgreSQL） |
+| 数据库 | OpenGauss 5.0 / MySQL 8.0 |
 | 缓存 | Redis |
 
 ## 项目结构
@@ -45,6 +45,7 @@ hospital-data-management-system/
 │           └── framework/security/    # 角色权限控制
 ├── yudao-ui-admin-vue3/               # 前端（Vue 3）
 ├── sql/                               # 数据库初始化脚本
+│   ├── mysql/                         # MySQL 建表 & 初始数据
 │   └── db2/                           # OpenGauss 建表 & 初始数据
 └── 文档/                              # 项目文档
     ├── 医院病人数据管理系统-总体设计文档.md
@@ -66,7 +67,7 @@ hospital-data-management-system/
 
 > 详见 [启动与测试指南](文档/启动与测试指南.md)
 
-**环境要求**：JDK 8+ / Maven 3.8+ / Docker（OpenGauss + Redis）/ Node 16+
+**环境要求**：JDK 8+ / Maven 3.8+ / Docker（OpenGauss + Redis 或本地 MySQL）/ Node 16+
 
 ```bash
 # 1. 启动数据库和缓存
@@ -86,6 +87,14 @@ npm install && npm run dev
 ```
 
 **默认登录**：用户名 `admin`，密码 `admin123`，租户 ID `1`
+
+测试账号：
+
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员 | admin | admin123 |
+| 医生 | doctor001 | 123456 |
+| 患者 | patient001 | 123456 |
 
 ## 关于
 

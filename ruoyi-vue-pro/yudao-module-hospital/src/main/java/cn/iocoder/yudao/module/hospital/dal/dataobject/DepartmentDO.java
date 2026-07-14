@@ -14,9 +14,12 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 科室 DO */
 public class DepartmentDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 科室名称 */
     private String deptName;
     private String phone;
     private String manager;

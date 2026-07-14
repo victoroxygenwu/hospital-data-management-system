@@ -7,9 +7,11 @@ import cn.iocoder.yudao.module.hospital.controller.admin.visit.vo.VisitPageReqVO
 import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
 import org.apache.ibatis.annotations.Mapper;
 
+/** 就诊记录 Mapper */
 @Mapper
 public interface VisitMapper extends BaseMapperX<VisitDO> {
 
+    /** 分页查询 */
     default PageResult<VisitDO> selectPage(VisitPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<VisitDO>()
                 .eqIfPresent(VisitDO::getPatientId, reqVO.getPatientId())

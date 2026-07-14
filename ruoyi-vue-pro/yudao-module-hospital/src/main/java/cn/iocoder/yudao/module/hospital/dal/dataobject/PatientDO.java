@@ -15,10 +15,14 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 患者 DO */
 public class PatientDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 系统用户ID */
     private Long userId;
+    /** 患者姓名 */
     private String name;
     private String gender;
     private LocalDate birthDate;

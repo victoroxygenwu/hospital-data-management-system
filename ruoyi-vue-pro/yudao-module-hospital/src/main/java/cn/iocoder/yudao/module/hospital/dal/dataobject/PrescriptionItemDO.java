@@ -15,10 +15,14 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 处方明细 DO */
 public class PrescriptionItemDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 处方ID */
     private Long prescriptionId;
+    /** 药品ID */
     private Long medicineId;
     private Integer quantity;
     private BigDecimal price;

@@ -19,6 +19,9 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 床位管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 床位管理")
 @RestController
 @RequestMapping("/hospital/bed")
@@ -26,8 +29,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class BedController {
 
     @Resource
-    private BedService bedService;
+    private BedService bedService; // 床位 Service
 
+    /**
+     * 创建床位
+     */
     @PostMapping("/create")
     @Operation(summary = "创建床位")
     @PreAuthorize("@ss.hasPermission('hospital:bed:create')")
@@ -35,6 +41,9 @@ public class BedController {
         return success(bedService.createBed(createReqVO));
     }
 
+    /**
+     * 修改床位
+     */
     @PutMapping("/update")
     @Operation(summary = "修改床位")
     @PreAuthorize("@ss.hasPermission('hospital:bed:update')")
@@ -43,6 +52,9 @@ public class BedController {
         return success(true);
     }
 
+    /**
+     * 删除床位
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除床位")
     @Parameter(name = "id", description = "床位ID", required = true)
@@ -52,6 +64,9 @@ public class BedController {
         return success(true);
     }
 
+    /**
+     * 获取床位详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取床位详情")
     @Parameter(name = "id", description = "床位ID", required = true)
@@ -61,6 +76,9 @@ public class BedController {
         return success(BeanUtils.toBean(bed, BedRespVO.class));
     }
 
+    /**
+     * 获取床位分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取床位分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:bed:query')")
@@ -69,6 +87,9 @@ public class BedController {
         return success(BeanUtils.toBean(pageResult, BedRespVO.class));
     }
 
+    /**
+     * 获取某病房下的床位列表
+     */
     @GetMapping("/list-by-ward")
     @Operation(summary = "获取某病房下的床位列表")
     @PreAuthorize("@ss.hasPermission('hospital:bed:query')")
@@ -78,6 +99,9 @@ public class BedController {
         return success(BeanUtils.toBean(list, BedRespVO.class));
     }
 
+    /**
+     * 床位分配
+     */
     @PutMapping("/assign")
     @Operation(summary = "床位分配")
     @Parameters({@Parameter(name = "bedId", description = "床位ID", required = true),
@@ -89,6 +113,9 @@ public class BedController {
         return success(true);
     }
 
+    /**
+     * 床位释放
+     */
     @PutMapping("/release")
     @Operation(summary = "床位释放")
     @Parameter(name = "bedId", description = "床位ID", required = true)

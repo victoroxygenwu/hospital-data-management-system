@@ -14,11 +14,16 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 处方 DO */
 public class PrescriptionDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 就诊ID */
     private Long visitId;
+    /** 开方医生ID */
     private Long doctorId;
+    /** 处方状态: 0-待发药 1-已发药 */
     private String status;
     private String notes;
 }

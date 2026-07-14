@@ -14,11 +14,16 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 医生 DO */
 public class DoctorDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 系统用户ID */
     private Long userId;
+    /** 所属科室ID */
     private Long deptId;
+    /** 医生姓名 */
     private String name;
     private String gender;
     private Integer age;

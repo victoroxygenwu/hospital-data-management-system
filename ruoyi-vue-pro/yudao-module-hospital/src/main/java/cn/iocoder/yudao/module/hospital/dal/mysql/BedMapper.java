@@ -10,9 +10,11 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
+/** 床位 Mapper */
 @Mapper
 public interface BedMapper extends BaseMapperX<BedDO> {
 
+    /** 分页查询 */
     default PageResult<BedDO> selectPage(BedPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<BedDO>()
                 .eqIfPresent(BedDO::getWardId, reqVO.getWardId())
@@ -21,6 +23,7 @@ public interface BedMapper extends BaseMapperX<BedDO> {
                 .orderByDesc(BedDO::getId));
     }
 
+    /** 按病区ID查询床位列表 */
     default List<BedDO> selectListByWardId(Long wardId) {
         return selectList(BedDO::getWardId, wardId);
     }

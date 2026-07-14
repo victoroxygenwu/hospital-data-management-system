@@ -19,16 +19,24 @@ import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_CAP
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_NOT_EXISTS;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.WARD_NO_BED_TO_RELEASE;
 
+/**
+ * 病房 Service 实现类
+ */
 @Service
 public class WardServiceImpl implements WardService {
 
     @Resource
-    private WardMapper wardMapper;
+    private WardMapper wardMapper; // 病房数据访问
     @Resource
-    private BedMapper bedMapper;
+    private BedMapper bedMapper; // 床位数据访问
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
+    /**
+     * 创建病房
+     * @param createReqVO 创建请求
+     * @return 新病房ID
+     */
     @Override
     public Long createWard(WardSaveReqVO createReqVO) {
         securityContext.requireAdmin();
@@ -37,6 +45,10 @@ public class WardServiceImpl implements WardService {
         return ward.getId();
     }
 
+    /**
+     * 更新病房
+     * @param updateReqVO 更新请求
+     */
     @Override
     public void updateWard(WardSaveReqVO updateReqVO) {
         securityContext.requireAdmin();
@@ -45,6 +57,10 @@ public class WardServiceImpl implements WardService {
         wardMapper.updateById(updateObj);
     }
 
+    /**
+     * 删除病房（级联删除病房下所有床位）
+     * @param id 病房ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteWard(Long id) {
@@ -55,21 +71,40 @@ public class WardServiceImpl implements WardService {
         wardMapper.deleteById(id);
     }
 
+    /**
+     * 查询病房
+     * @param id 病房ID
+     * @return 病房信息
+     */
     @Override
     public WardDO getWard(Long id) {
         return wardMapper.selectById(id);
     }
 
+    /**
+     * 分页查询病房
+     * @param pageReqVO 分页请求
+     * @return 病房分页结果
+     */
     @Override
     public PageResult<WardDO> getWardPage(WardPageReqVO pageReqVO) {
         return wardMapper.selectPage(pageReqVO);
     }
 
+    /**
+     * 按科室ID查询病房列表
+     * @param deptId 科室ID
+     * @return 病房列表
+     */
     @Override
     public List<WardDO> getWardListByDeptId(Long deptId) {
         return wardMapper.selectListByDeptId(deptId);
     }
 
+    /**
+     * 递增已用床位数（原子操作：SQL层校验 used_beds < capacity）
+     * @param wardId 病房ID
+     */
     @Override
     public void incrementUsedBeds(Long wardId) {
         int affected = wardMapper.incrementUsedBeds(wardId);
@@ -79,6 +114,10 @@ public class WardServiceImpl implements WardService {
         }
     }
 
+    /**
+     * 递减已用床位数（原子操作：SQL层校验 used_beds > 0）
+     * @param wardId 病房ID
+     */
     @Override
     public void decrementUsedBeds(Long wardId) {
         int affected = wardMapper.decrementUsedBeds(wardId);

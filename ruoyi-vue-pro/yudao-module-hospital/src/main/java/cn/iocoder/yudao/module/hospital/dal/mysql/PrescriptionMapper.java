@@ -10,9 +10,11 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
+/** 处方 Mapper */
 @Mapper
 public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
 
+    /** 分页查询 */
     default PageResult<PrescriptionDO> selectPage(PrescriptionPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<PrescriptionDO>()
                 .eqIfPresent(PrescriptionDO::getVisitId, reqVO.getVisitId())

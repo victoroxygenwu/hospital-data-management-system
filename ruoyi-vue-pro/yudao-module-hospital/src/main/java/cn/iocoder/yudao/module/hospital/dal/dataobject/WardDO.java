@@ -14,14 +14,18 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 病区 DO */
 public class WardDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 所属科室ID */
     private Long deptId;
     private String wardNo;
     private String type;
     private Integer capacity;
     private Integer usedBeds;
+    /** 病区状态 */
     private Integer status;
     private String description;
 }

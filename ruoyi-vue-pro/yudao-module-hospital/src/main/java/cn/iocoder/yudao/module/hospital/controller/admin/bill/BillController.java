@@ -18,6 +18,9 @@ import javax.validation.Valid;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+/**
+ * 账单管理 管理后台 Controller
+ */
 @Tag(name = "管理后台 - 账单管理")
 @RestController
 @RequestMapping("/hospital/bill")
@@ -25,8 +28,11 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 public class BillController {
 
     @Resource
-    private BillService billService;
+    private BillService billService; // 账单 Service
 
+    /**
+     * 创建账单
+     */
     @PostMapping("/create")
     @Operation(summary = "创建账单")
     @PreAuthorize("@ss.hasPermission('hospital:bill:create')")
@@ -34,6 +40,9 @@ public class BillController {
         return success(billService.createBill(createReqVO));
     }
 
+    /**
+     * 修改账单
+     */
     @PutMapping("/update")
     @Operation(summary = "修改账单")
     @PreAuthorize("@ss.hasPermission('hospital:bill:update')")
@@ -42,6 +51,9 @@ public class BillController {
         return success(true);
     }
 
+    /**
+     * 删除账单
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除账单")
     @Parameter(name = "id", description = "账单ID", required = true)
@@ -51,6 +63,9 @@ public class BillController {
         return success(true);
     }
 
+    /**
+     * 获取账单详情
+     */
     @GetMapping("/get")
     @Operation(summary = "获取账单详情")
     @Parameter(name = "id", description = "账单ID", required = true)
@@ -60,6 +75,9 @@ public class BillController {
         return success(BeanUtils.toBean(bill, BillRespVO.class));
     }
 
+    /**
+     * 获取账单分页列表
+     */
     @GetMapping("/page")
     @Operation(summary = "获取账单分页列表")
     @PreAuthorize("@ss.hasPermission('hospital:bill:query')")
@@ -68,6 +86,9 @@ public class BillController {
         return success(BeanUtils.toBean(pageResult, BillRespVO.class));
     }
 
+    /**
+     * 支付账单
+     */
     @PutMapping("/pay")
     @Operation(summary = "支付账单")
     @Parameters({@Parameter(name = "id", description = "账单ID", required = true),

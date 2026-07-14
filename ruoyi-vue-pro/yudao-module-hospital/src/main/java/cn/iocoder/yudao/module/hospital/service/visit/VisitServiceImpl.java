@@ -23,20 +23,28 @@ import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionU
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.VISIT_NOT_EXISTS;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_DATA_ACCESS_DENIED;
 
+/**
+ * 就诊 Service 实现类
+ */
 @Service
 public class VisitServiceImpl implements VisitService {
 
     @Resource
-    private VisitMapper visitMapper;
+    private VisitMapper visitMapper; // 就诊数据访问
     @Resource
-    private PrescriptionMapper prescriptionMapper;
+    private PrescriptionMapper prescriptionMapper; // 处方数据访问
     @Resource
-    private PrescriptionItemMapper prescriptionItemMapper;
+    private PrescriptionItemMapper prescriptionItemMapper; // 处方明细数据访问
     @Resource
-    private BillMapper billMapper;
+    private BillMapper billMapper; // 账单数据访问
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
+    /**
+     * 创建就诊记录
+     * @param createReqVO 创建请求
+     * @return 新就诊ID
+     */
     @Override
     public Long createVisit(VisitSaveReqVO createReqVO) {
         VisitDO visit = BeanUtils.toBean(createReqVO, VisitDO.class);
@@ -44,6 +52,10 @@ public class VisitServiceImpl implements VisitService {
         return visit.getId();
     }
 
+    /**
+     * 更新就诊记录
+     * @param updateReqVO 更新请求
+     */
     @Override
     public void updateVisit(VisitSaveReqVO updateReqVO) {
         validateVisitExists(updateReqVO.getId());
@@ -51,6 +63,10 @@ public class VisitServiceImpl implements VisitService {
         visitMapper.updateById(updateObj);
     }
 
+    /**
+     * 删除就诊记录（级联删除关联的处方、处方明细和账单）
+     * @param id 就诊ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteVisit(Long id) {
@@ -66,11 +82,21 @@ public class VisitServiceImpl implements VisitService {
         visitMapper.deleteById(id);
     }
 
+    /**
+     * 查询就诊记录
+     * @param id 就诊ID
+     * @return 就诊信息
+     */
     @Override
     public VisitDO getVisit(Long id) {
         return visitMapper.selectById(id);
     }
 
+    /**
+     * 分页查询就诊（角色数据隔离：医生看自己的患者，患者看自己的记录）
+     * @param pageReqVO 分页请求
+     * @return 就诊分页结果
+     */
     @Override
     public PageResult<VisitDO> getVisitPage(VisitPageReqVO pageReqVO) {
         // 角色数据隔离：医生只看自己的患者，患者只看自己的记录
@@ -86,6 +112,11 @@ public class VisitServiceImpl implements VisitService {
         return visitMapper.selectPage(pageReqVO);
     }
 
+    /**
+     * 按患者ID查询就诊列表（权限校验：非管理员只能查自己）
+     * @param patientId 患者ID
+     * @return 就诊列表
+     */
     @Override
     public List<VisitDO> getVisitsByPatientId(Long patientId) {
         // 权限校验：非管理员只能查自己的就诊记录

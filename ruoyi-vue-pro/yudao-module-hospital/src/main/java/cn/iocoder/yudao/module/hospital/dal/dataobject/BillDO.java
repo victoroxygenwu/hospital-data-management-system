@@ -16,14 +16,19 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/** 账单 DO */
 public class BillDO extends BaseDO {
+    /** 主键ID */
     @TableId
     private Long id;
+    /** 就诊ID */
     private Long visitId;
+    /** 患者ID */
     private Long patientId;
     private BigDecimal totalAmount;
     private BigDecimal payAmount;
     private LocalDateTime payTime;
     private String payMethod;
+    /** 支付状态 */
     private String status;
 }
