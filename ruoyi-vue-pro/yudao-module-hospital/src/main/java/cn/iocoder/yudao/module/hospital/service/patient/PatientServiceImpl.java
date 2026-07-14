@@ -34,21 +34,21 @@ import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.PATIENT_
 public class PatientServiceImpl implements PatientService {
 
     @Resource
-    private PatientMapper patientMapper;
+    private PatientMapper patientMapper; // 患者数据访问
     @Resource
-    private VisitMapper visitMapper;
+    private VisitMapper visitMapper; // 就诊数据访问
     @Resource
-    private PrescriptionMapper prescriptionMapper;
+    private PrescriptionMapper prescriptionMapper; // 处方数据访问
     @Resource
-    private PrescriptionItemMapper prescriptionItemMapper;
+    private PrescriptionItemMapper prescriptionItemMapper; // 处方明细数据访问
     @Resource
-    private BillMapper billMapper;
+    private BillMapper billMapper; // 账单数据访问
     @Resource
-    private BedMapper bedMapper;
+    private BedMapper bedMapper; // 床位数据访问
     @Resource
-    private WardService wardService;
+    private WardService wardService; // 病房服务
     @Resource
-    private HospitalSecurityContext securityContext;
+    private HospitalSecurityContext securityContext; // 角色权限上下文
 
     /**
      * 创建患者

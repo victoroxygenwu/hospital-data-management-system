@@ -85,7 +85,7 @@ public class BillServiceImpl implements BillService {
     }
 
     /**
-     * 支付账单（原子操作：WHERE status=0 防止重复付款）
+     * 支付账单（条件更新：仅当 status=0 时支付，防止重复付款）
      * @param id 账单ID
      * @param payMethod 支付方式
      */
@@ -93,7 +93,7 @@ public class BillServiceImpl implements BillService {
     public void payBill(Long id, String payMethod) {
         BillDO bill = billMapper.selectById(id);
         if (bill == null) throw exception(BILL_NOT_EXISTS);
-        // 原子支付：WHERE status=0 防止重复付款，pay_amount 直接取 total_amount 列
+        // 条件更新：仅当 status=0 时支付，pay_amount 直接取 total_amount 列；影响行数 0 表示已支付
         int affected = billMapper.payBill(id, payMethod);
         if (affected == 0) throw exception(BILL_ALREADY_PAID);
     }

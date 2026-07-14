@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
+import cn.iocoder.yudao.module.hospital.enums.BedStatusEnum;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.module.hospital.service.ward.WardService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -57,7 +58,7 @@ public class BedServiceImpl implements BedService {
         }
         BedDO bed = BeanUtils.toBean(createReqVO, BedDO.class);
         // 新建床位默认为空闲，状态只能通过 assignBed/releaseBed 变更
-        bed.setStatus(0);
+        bed.setStatus(BedStatusEnum.FREE.getStatus());
         bed.setPatientId(null);
         bedMapper.insert(bed);
         return bed.getId();
@@ -125,7 +126,7 @@ public class BedServiceImpl implements BedService {
     }
 
     /**
-     * 分配床位（原子操作：WHERE status=0 防止并发重复分配）
+     * 分配床位（条件更新：仅当 status=FREE(0) 时才分配，WHERE 携带状态约束防止并发双占）
      * @param bedId 床位ID
      * @param patientId 患者ID
      */
@@ -134,13 +135,16 @@ public class BedServiceImpl implements BedService {
     public void assignBed(Long bedId, Long patientId) {
         BedDO bed = bedMapper.selectById(bedId);
         if (bed == null) throw exception(BED_NOT_EXISTS);
-        if (bed.getStatus() == null || bed.getStatus().intValue() != 0) throw exception(BED_ALREADY_OCCUPIED);
-        // 用 UpdateWrapper 确保 null 字段也能写入（MP 默认跳过 null）
-        bedMapper.update(null, new LambdaUpdateWrapper<BedDO>()
+        if (bed.getStatus() == null || !BedStatusEnum.FREE.getStatus().equals(bed.getStatus())) throw exception(BED_ALREADY_OCCUPIED);
+        // 真条件更新：WHERE id=? AND status=FREE(0)。并发下若已被占用则影响行数为 0，
+        // 直接抛异常，避免双占与 ward.usedBeds 虚高
+        int rows = bedMapper.update(null, new LambdaUpdateWrapper<BedDO>()
                 .eq(BedDO::getId, bedId)
-                .set(BedDO::getStatus, 1)
+                .eq(BedDO::getStatus, BedStatusEnum.FREE.getStatus())
+                .set(BedDO::getStatus, BedStatusEnum.OCCUPIED.getStatus())
                 .set(BedDO::getPatientId, patientId)
                 .set(BedDO::getAdmissionTime, LocalDateTime.now()));
+        if (rows == 0) throw exception(BED_ALREADY_OCCUPIED);
         wardService.incrementUsedBeds(bed.getWardId());
     }
 
@@ -149,13 +153,16 @@ public class BedServiceImpl implements BedService {
     public void releaseBed(Long bedId) {
         BedDO bed = bedMapper.selectById(bedId);
         if (bed == null) throw exception(BED_NOT_EXISTS);
-        if (bed.getStatus() == null || bed.getStatus().intValue() != 1) throw exception(BED_NOT_OCCUPIED);
-        // 用 UpdateWrapper 强制写入 null 到 patientId 和 admissionTime
-        bedMapper.update(null, new LambdaUpdateWrapper<BedDO>()
+        if (bed.getStatus() == null || !BedStatusEnum.OCCUPIED.getStatus().equals(bed.getStatus())) throw exception(BED_NOT_OCCUPIED);
+        // 真条件更新：WHERE id=? AND status=OCCUPIED(1)。并发下若已被释放则影响行数为 0，
+        // 直接抛异常，避免重复释放导致 ward.usedBeds 虚低
+        int rows = bedMapper.update(null, new LambdaUpdateWrapper<BedDO>()
                 .eq(BedDO::getId, bedId)
-                .set(BedDO::getStatus, 0)
+                .eq(BedDO::getStatus, BedStatusEnum.OCCUPIED.getStatus())
+                .set(BedDO::getStatus, BedStatusEnum.FREE.getStatus())
                 .set(BedDO::getPatientId, null)
                 .set(BedDO::getAdmissionTime, null));
+        if (rows == 0) throw exception(BED_NOT_OCCUPIED);
         wardService.decrementUsedBeds(bed.getWardId());
     }
 

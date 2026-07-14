@@ -31,6 +31,7 @@ public interface ErrorCodeConstants {
     // ========== 药品 1-100-007-000 ==========
     ErrorCode MEDICINE_NOT_EXISTS = new ErrorCode(1_100_007_000, "药品不存在");
     ErrorCode MEDICINE_STOCK_NOT_ENOUGH = new ErrorCode(1_100_007_001, "药品库存不足");
+    ErrorCode MEDICINE_HAS_PRESCRIPTION = new ErrorCode(1_100_007_002, "该药品存在关联处方明细，无法删除");
 
     // ========== 处方 1-100-008-000 ==========
     ErrorCode PRESCRIPTION_NOT_EXISTS = new ErrorCode(1_100_008_000, "处方不存在");

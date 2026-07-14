@@ -46,7 +46,41 @@
             <groupId>cn.iocoder.boot</groupId>
             <artifactId>yudao-spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <!-- 排除 mockito-inline(4.11.0) 与 mockito-core(4.5.1) 版本错配导致的
+                     "Could not modify all classes [java.lang.Object]" 报错；
+                     回退到 mockito-core 默认 subclass maker，JDK21 下可正常 mock 非 final 类 -->
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-inline</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- starter-test 会排除 mockito-core，而 mockito 的 API 类(org.mockito.*) 来自
+             mockito-core；这里显式引入 4.5.1 以保证测试 classpath 含 Mockito，
+             且不使用 inline maker（无需 agent，JDK21 下用 subclass maker 即可） -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.5.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- JDK21 下 byte-buddy 1.12.23 默认拒绝生成 Java21(65) 类文件；
+                 开启 net.bytebuddy.experimental 实验开关以放行 JDK21
+                 （mockito-core 4.5.1 自带 byte-buddy 1.12.23，离线仓库无更新版本）。
+                 本项目父/子 pom 未配置 jacoco 等会注入 argLine 的插件，故直接写死该开关。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

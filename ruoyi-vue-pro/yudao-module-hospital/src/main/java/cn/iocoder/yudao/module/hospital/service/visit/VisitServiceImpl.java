@@ -12,6 +12,7 @@ import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
+import cn.iocoder.yudao.module.hospital.enums.VisitStatusEnum;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,8 @@ public class VisitServiceImpl implements VisitService {
         VisitDO visit = BeanUtils.toBean(createReqVO, VisitDO.class);
         // 后端兜底默认状态为待就诊(0)，避免前端漏传导致状态为空
         if (visit.getStatus() == null) {
-            visit.setStatus(0);
+            // 兜底默认状态为待就诊，避免前端漏传导致状态为空
+            visit.setStatus(VisitStatusEnum.PENDING.getStatus());
         }
         visitMapper.insert(visit);
         return visit.getId();
@@ -64,11 +66,13 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public void updateVisit(VisitSaveReqVO updateReqVO) {
         VisitDO existing = validateVisitExists(updateReqVO.getId());
-        // 终态守卫：已完成(2) / 已取消(3) 的状态不可再变更
+        // 终态守卫：已完成 / 已取消 的状态不可再变更
         // 与本项目处方/账单的专用动作守卫一致，仅在通用 update 上加这一条最小保护
         Integer from = existing != null ? existing.getStatus() : null;
         Integer to = updateReqVO.getStatus();
-        if (to != null && from != null && (from == 2 || from == 3) && !from.equals(to)) {
+        VisitStatusEnum fromEnum = VisitStatusEnum.fromStatus(from);
+        if (to != null && fromEnum != null && fromEnum.isTerminal()
+                && !fromEnum.getStatus().equals(to)) {
             throw exception(VISIT_STATUS_ILLEGAL);
         }
         VisitDO updateObj = BeanUtils.toBean(updateReqVO, VisitDO.class);

@@ -9,6 +9,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
+import cn.iocoder.yudao.module.hospital.enums.PrescriptionStatusEnum;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
@@ -197,7 +198,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     /**
-     * 发药（原子操作：WHERE status=0 防止并发重复发药，同时扣减药品库存）
+     * 发药（条件更新：仅当 status=0 时发药，防止并发重复发药，同时扣减药品库存）
      * @param id 处方ID
      */
     @Override
@@ -224,7 +225,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .patientId(visit != null ? visit.getPatientId() : null)
                 .totalAmount(totalAmount)
                 .payAmount(BigDecimal.ZERO)
-                .status(0)
+                .status(PrescriptionStatusEnum.UNDISPENSED.getStatus())
                 .build();
         billMapper.insert(bill);
     }

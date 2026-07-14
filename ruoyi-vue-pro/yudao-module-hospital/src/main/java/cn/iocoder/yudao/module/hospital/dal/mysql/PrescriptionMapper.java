@@ -3,8 +3,10 @@ package cn.iocoder.yudao.module.hospital.dal.mysql;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionPageReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
+import cn.iocoder.yudao.module.hospital.enums.PrescriptionStatusEnum;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
@@ -29,12 +31,11 @@ public interface PrescriptionMapper extends BaseMapperX<PrescriptionDO> {
                 .orderByDesc(PrescriptionDO::getId));
     }
 
-    /** 发药 */
+    /** 发药：真条件更新，仅当 status=0（未发药）时才置为 1，返回影响行数（0 表示已发药或不存在），避免并发重复发药 */
     default int dispense(Long id) {
-        PrescriptionDO p = selectById(id);
-        if (p == null || !Integer.valueOf(0).equals(p.getStatus())) return 0;
-        p.setStatus(1);
-        updateById(p);
-        return 1;
+        return update(null, new LambdaUpdateWrapper<PrescriptionDO>()
+                .eq(PrescriptionDO::getId, id)
+                .eq(PrescriptionDO::getStatus, PrescriptionStatusEnum.UNDISPENSED.getStatus())
+                .set(PrescriptionDO::getStatus, PrescriptionStatusEnum.DISPENSED.getStatus()));
     }
 }

@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.hospital.controller.admin.medicine.vo.MedicinePag
 import cn.iocoder.yudao.module.hospital.controller.admin.medicine.vo.MedicineSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_HAS_PRESCRIPTION;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.MEDICINE_STOCK_NOT_ENOUGH;
 
 /**
@@ -24,6 +26,8 @@ public class MedicineServiceImpl implements MedicineService {
 
     @Resource
     private MedicineMapper medicineMapper; // 药品数据访问
+    @Resource
+    private PrescriptionItemMapper prescriptionItemMapper; // 处方明细数据访问
     @Resource
     private HospitalSecurityContext securityContext; // 角色权限上下文
 
@@ -60,6 +64,10 @@ public class MedicineServiceImpl implements MedicineService {
     public void deleteMedicine(Long id) {
         securityContext.requireAdmin();
         validateMedicineExists(id);
+        // 删除前校验：若存在引用该药品的处方明细，禁止删除，避免产生孤儿处方明细
+        if (prescriptionItemMapper.countByMedicineId(id) > 0) {
+            throw exception(MEDICINE_HAS_PRESCRIPTION);
+        }
         medicineMapper.deleteById(id);
     }
 
