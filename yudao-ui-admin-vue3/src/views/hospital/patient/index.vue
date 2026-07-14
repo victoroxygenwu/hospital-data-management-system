@@ -26,11 +26,11 @@
       <el-table-column label="性别" width="60">
         <template #default="{ row }">{{ getDictLabel('hospital_patient_gender', row.gender) }}</template>
       </el-table-column>
-      <el-table-column label="出生日期" prop="birthDate" width="120" />
+      <el-table-column label="出生日期" width="120"><template #default="{ row }">{{ formatTs(row.birthDate) }}</template></el-table-column>
       <el-table-column label="手机号" prop="phone" width="130" />
       <el-table-column label="身份证号" prop="idCard" width="180" />
       <el-table-column label="医保卡号" prop="insuranceNo" width="150" />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -72,7 +72,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPatientPage, getPatient, createPatient, updatePatient, deletePatient } from '@/api/hospital/patient'
-import { getIntDictOptions, getDictLabel } from '@/utils/hospitalDict'
+import { getIntDictOptions, getDictLabel, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalPatient' })
 
@@ -104,6 +104,15 @@ const openForm = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增病人' : '编辑病人'
   if (type === 'update' && id) {
     const res = await getPatient(id)
+    // 后端返回时间戳格式的日期，需转为 "YYYY-MM-DD" 字符串
+    if (res.birthDate && typeof res.birthDate === 'number') {
+      const d = new Date(res.birthDate)
+      res.birthDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+    }
+    if (res.admissionDate && typeof res.admissionDate === 'number') {
+      const d = new Date(res.admissionDate)
+      res.admissionDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+    }
     Object.assign(formData, res)
   } else {
     Object.assign(formData, { id: undefined, name: '', gender: 1, birthDate: '', phone: '', idCard: '', address: '', emergencyContact: '', emergencyPhone: '', insuranceNo: '', medicalHistory: '' })

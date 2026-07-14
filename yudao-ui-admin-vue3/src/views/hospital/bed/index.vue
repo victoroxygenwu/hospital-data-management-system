@@ -32,8 +32,11 @@
       <el-table-column label="床位号" prop="bedNo" width="100" />
       <el-table-column label="状态" width="80">
         <template #default="{ row }">
-          <el-tag :type="getDictColorType('hospital_bed_status', row.status)">
-            {{ getDictLabel('hospital_bed_status', row.status) }}
+          <el-tag v-if="row.status === 0" type="success">空闲</el-tag>
+          <el-tag v-else-if="row.status === 1" type="danger">已占用</el-tag>
+          <el-tag v-else-if="row.status === 2" type="warning">维修中</el-tag>
+          <el-tag v-else :type="getDictColorType('hospital_bed_status', row.status)">
+            {{ getDictLabel('hospital_bed_status', row.status) || '未知(' + row.status + ')' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -41,9 +44,9 @@
         <template #default="{ row }">{{ row.patientId || '-' }}</template>
       </el-table-column>
       <el-table-column label="入住时间" prop="admissionTime" width="180">
-        <template #default="{ row }">{{ row.admissionTime || '-' }}</template>
+        <template #default="{ row }">{{ formatTs(row.admissionTime) || '-' }}</template>
       </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -76,7 +79,11 @@
     <!-- 分配弹窗 -->
     <el-dialog v-model="assignVisible" title="床位分配" width="400px">
       <el-form label-width="80px">
-        <el-form-item label="患者ID" required><el-input v-model.number="assignPatientId" placeholder="请输入患者ID" /></el-form-item>
+        <el-form-item label="患者" required>
+          <el-select v-model="assignPatientId" placeholder="请选择患者" filterable style="width:100%;">
+            <el-option v-for="p in patientOptions" :key="p.id" :label="p.name + ' (ID:' + p.id + ')'" :value="p.id" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="assignVisible = false">取消</el-button>
@@ -91,7 +98,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBedPage, getBed, createBed, updateBed, deleteBed, assignBed, releaseBed } from '@/api/hospital/bed'
 import { getWardPage } from '@/api/hospital/ward'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getPatientPage } from '@/api/hospital/patient'
+import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalBed' })
 
@@ -104,6 +112,15 @@ const loadWards = async () => {
   } catch { /* ignore */ }
 }
 const getWardName = (wardId: number) => wardOptions.value.find(w => w.id === wardId)?.wardNo || String(wardId || '')
+
+// 患者下拉
+const patientOptions = ref<{ id: number; name: string }[]>([])
+const loadPatients = async () => {
+  try {
+    const res = await getPatientPage({ pageNo: 1, pageSize: 200 })
+    patientOptions.value = (res.list || []).map((p: any) => ({ id: p.id, name: p.name }))
+  } catch { /* ignore */ }
+}
 
 const loading = ref(false)
 const list = ref([])
@@ -164,7 +181,7 @@ const handleAssign = (bedId: number) => {
 }
 
 const submitAssign = async () => {
-  if (!assignPatientId.value) { ElMessage.warning('请输入患者ID'); return }
+  if (!assignPatientId.value) { ElMessage.warning('请选择患者'); return }
   assigning.value = true
   try {
     await assignBed(assignBedId.value!, assignPatientId.value!)
@@ -181,6 +198,7 @@ const handleRelease = async (bedId: number) => {
 
 onMounted(async () => {
   await loadWards()
+  loadPatients()
   getList()
 })
 </script>

@@ -14,8 +14,6 @@ public class BedSaveReqVO {
     @Schema(description = "床位号", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "床位号不能为空")
     private String bedNo;
-    @Schema(description = "状态：空闲/已占用/维护中")
-    private String status;
-    @Schema(description = "当前入住的患者ID")
-    private Long patientId;
+    // 注意：status 和 patientId 不在此 VO 中，
+    // 床位状态只能通过 assignBed / releaseBed 接口变更
 }

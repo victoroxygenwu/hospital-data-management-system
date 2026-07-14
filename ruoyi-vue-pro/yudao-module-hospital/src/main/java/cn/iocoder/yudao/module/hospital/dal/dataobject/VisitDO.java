@@ -31,5 +31,5 @@ public class VisitDO extends BaseDO {
     private String diagnosis;
     private String notes;
     /** 就诊状态 */
-    private String status;
+    private Integer status;
 }

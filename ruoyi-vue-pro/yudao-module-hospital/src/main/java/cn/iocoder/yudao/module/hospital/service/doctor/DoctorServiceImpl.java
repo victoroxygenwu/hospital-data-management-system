@@ -5,9 +5,13 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.hospital.controller.admin.doctor.vo.DoctorPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.doctor.vo.DoctorSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DoctorDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.DoctorMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 
@@ -21,9 +25,11 @@ import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.*;
 public class DoctorServiceImpl implements DoctorService {
 
     @Resource
-    private DoctorMapper doctorMapper; // 医生数据访问
+    private DoctorMapper doctorMapper;
     @Resource
-    private HospitalSecurityContext securityContext; // 角色权限上下文
+    private VisitMapper visitMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     /**
      * 创建医生
@@ -51,13 +57,21 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     /**
-     * 删除医生
+     * 删除医生（若存在关联就诊记录则阻止删除）
      * @param id 医生ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDoctor(Long id) {
         securityContext.requireAdmin();
         validateDoctorExists(id);
+        // 校验是否存在关联就诊记录
+        long visitCount = visitMapper.selectCount(
+                new LambdaQueryWrapper<VisitDO>()
+                        .eq(VisitDO::getDoctorId, id));
+        if (visitCount > 0) {
+            throw exception(DOCTOR_HAS_VISITS);
+        }
         doctorMapper.deleteById(id);
     }
 

@@ -5,8 +5,14 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.hospital.controller.admin.department.vo.DepartmentPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.department.vo.DepartmentSaveReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DepartmentDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.DoctorDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.WardDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.DepartmentMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.DoctorMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
+import cn.iocoder.yudao.module.hospital.service.ward.WardService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 
@@ -20,7 +26,13 @@ import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.DEPARTME
 public class DepartmentServiceImpl implements DepartmentService {
 
     @Resource
-    private DepartmentMapper departmentMapper; // 科室数据访问
+    private DepartmentMapper departmentMapper;
+    @Resource
+    private DoctorMapper doctorMapper;
+    @Resource
+    private WardMapper wardMapper;
+    @Resource
+    private WardService wardService;
 
     /**
      * 创建科室
@@ -46,12 +58,21 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     /**
-     * 删除科室
+     * 删除科室（级联删除下属医生和病房，病房内床位由 WardService 级联处理）
      * @param id 科室ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDepartment(Long id) {
         validateDepartmentExists(id);
+        // 1. 级联删除下属医生
+        doctorMapper.delete(DoctorDO::getDeptId, id);
+        // 2. 级联删除下属病房（WardService 内部级联删除床位）
+        List<WardDO> wards = wardMapper.selectList(WardDO::getDeptId, id);
+        for (WardDO ward : wards) {
+            wardService.deleteWard(ward.getId());
+        }
+        // 3. 删除科室
         departmentMapper.deleteById(id);
     }
 

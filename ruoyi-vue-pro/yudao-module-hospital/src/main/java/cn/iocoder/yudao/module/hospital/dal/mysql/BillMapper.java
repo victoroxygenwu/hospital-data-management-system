@@ -6,14 +6,12 @@ import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.hospital.controller.admin.bill.vo.BillPageReqVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.BillDO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Update;
+import java.time.LocalDateTime;
 
 /** 账单 Mapper */
 @Mapper
 public interface BillMapper extends BaseMapperX<BillDO> {
 
-    /** 分页查询 */
     default PageResult<BillDO> selectPage(BillPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<BillDO>()
                 .eqIfPresent(BillDO::getVisitId, reqVO.getVisitId())
@@ -22,8 +20,15 @@ public interface BillMapper extends BaseMapperX<BillDO> {
                 .orderByDesc(BillDO::getId));
     }
 
-    /** 支付账单（原子 SQL，WHERE status=0 防止重复付款；pay_amount 直接引用 total_amount 列） */
-    @Update("UPDATE hospital_bill SET status = 1, pay_amount = total_amount, pay_time = NOW(), pay_method = #{payMethod} WHERE id = #{id} AND status = 0")
-    int payBill(@Param("id") Long id, @Param("payMethod") String payMethod);
-
+    /** 支付账单 */
+    default int payBill(Long id, String payMethod) {
+        BillDO bill = selectById(id);
+        if (bill == null || !Integer.valueOf(0).equals(bill.getStatus())) return 0;
+        bill.setStatus(1);
+        bill.setPayAmount(bill.getTotalAmount());
+        bill.setPayMethod(payMethod);
+        bill.setPayTime(LocalDateTime.now());
+        updateById(bill);
+        return 1;
+    }
 }

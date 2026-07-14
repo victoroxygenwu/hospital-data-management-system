@@ -32,7 +32,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="notes" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="createTime" label="创建时间" width="160" />
+        <el-table-column label="创建时间" width="160"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="viewDetail(row)">查看详情</el-button>
@@ -61,7 +61,7 @@
           <el-descriptions-item label="就诊ID">{{ currentPrescription.visitId }}</el-descriptions-item>
           <el-descriptions-item label="医生ID">{{ currentPrescription.doctorId }}</el-descriptions-item>
           <el-descriptions-item label="备注" :span="2">{{ currentPrescription.notes || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ currentPrescription.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ formatTs(currentPrescription.createTime) }}</el-descriptions-item>
         </el-descriptions>
         <el-divider>药品明细</el-divider>
         <el-table :data="currentPrescription.items || []" border size="small">
@@ -81,7 +81,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPrescriptionPage, getPrescription, deletePrescription, dispensePrescription } from '@/api/hospital/prescription'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
 
 const searchForm = reactive({ visitId: undefined as any, status: undefined as any })
 const pageParams = reactive({ pageNo: 1, pageSize: 10 })

@@ -11,7 +11,7 @@
       </el-form-item>
       <el-form-item label="病房类型">
         <el-select v-model="queryParams.type" placeholder="全部类型" clearable>
-          <el-option v-for="opt in getIntDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option v-for="opt in getDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -43,7 +43,7 @@
         </template>
       </el-table-column>
       <el-table-column label="描述" prop="description" min-width="150" show-overflow-tooltip />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -66,7 +66,7 @@
         <el-form-item label="病房编号" required><el-input v-model="formData.wardNo" placeholder="如: A-101" /></el-form-item>
         <el-form-item label="病房类型">
           <el-select v-model="formData.type" placeholder="请选择病房类型" style="width:100%;">
-            <el-option v-for="opt in getIntDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option v-for="opt in getDictOptions('hospital_ward_type')" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="总床位数"><el-input-number v-model="formData.capacity" :min="1" style="width:100%;" /></el-form-item>
@@ -85,7 +85,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getWardPage, getWard, createWard, updateWard, deleteWard } from '@/api/hospital/ward'
 import { getDepartmentPage } from '@/api/hospital/department'
-import { getIntDictOptions, getDictLabel } from '@/utils/hospitalDict'
+import { getDictOptions, getIntDictOptions, getDictLabel, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalWard' })
 

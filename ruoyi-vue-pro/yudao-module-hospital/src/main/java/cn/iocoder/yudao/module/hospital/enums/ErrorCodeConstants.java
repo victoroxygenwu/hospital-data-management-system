@@ -8,6 +8,7 @@ public interface ErrorCodeConstants {
 
     // ========== 医生 1-100-002-000 ==========
     ErrorCode DOCTOR_NOT_EXISTS = new ErrorCode(1_100_002_000, "医生不存在");
+    ErrorCode DOCTOR_HAS_VISITS = new ErrorCode(1_100_002_001, "该医生存在关联就诊记录，无法删除");
 
     // ========== 病人 1-100-003-000 ==========
     ErrorCode PATIENT_NOT_EXISTS = new ErrorCode(1_100_003_000, "病人不存在");
@@ -16,6 +17,7 @@ public interface ErrorCodeConstants {
     ErrorCode WARD_NOT_EXISTS = new ErrorCode(1_100_004_000, "病房不存在");
     ErrorCode WARD_CAPACITY_FULL = new ErrorCode(1_100_004_001, "病房床位已满");
     ErrorCode WARD_NO_BED_TO_RELEASE = new ErrorCode(1_100_004_002, "无已占用床位可释放");
+    ErrorCode WARD_BED_EXCEED_CAPACITY = new ErrorCode(1_100_004_003, "床位数量已超过病房总床位，无法继续添加");
 
     // ========== 床位 1-100-005-000 ==========
     ErrorCode BED_NOT_EXISTS = new ErrorCode(1_100_005_000, "床位不存在");
@@ -24,6 +26,7 @@ public interface ErrorCodeConstants {
 
     // ========== 就诊 1-100-006-000 ==========
     ErrorCode VISIT_NOT_EXISTS = new ErrorCode(1_100_006_000, "就诊记录不存在");
+    ErrorCode VISIT_STATUS_ILLEGAL = new ErrorCode(1_100_006_001, "就诊已完成或已取消，状态不可再变更");
 
     // ========== 药品 1-100-007-000 ==========
     ErrorCode MEDICINE_NOT_EXISTS = new ErrorCode(1_100_007_000, "药品不存在");

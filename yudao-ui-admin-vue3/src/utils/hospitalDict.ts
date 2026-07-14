@@ -43,3 +43,16 @@ export const getDictColorType = (dictType: string, value: any): string => {
   const item = options.find((d: any) => String(d.value) === String(value))
   return item?.colorType || 'info'
 }
+
+/**
+ * 时间戳（毫秒）→ 可读日期字符串 "YYYY-MM-DD HH:mm:ss"
+ * 兼容后端 Jackson write-dates-as-timestamps=true 的输出
+ */
+export const formatTs = (ts: any): string => {
+  if (!ts) return '-'
+  const d = new Date(typeof ts === 'number' ? ts : Number(ts))
+  if (isNaN(d.getTime())) return String(ts)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+    + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds())
+}

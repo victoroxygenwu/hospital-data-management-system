@@ -41,12 +41,15 @@ public class WardServiceImpl implements WardService {
     public Long createWard(WardSaveReqVO createReqVO) {
         securityContext.requireAdmin();
         WardDO ward = BeanUtils.toBean(createReqVO, WardDO.class);
+        // 新建病房已用床位为0，状态自动计算
+        ward.setUsedBeds(0);
+        ward.setStatus(0);
         wardMapper.insert(ward);
         return ward.getId();
     }
 
     /**
-     * 更新病房
+     * 更新病房（usedBeds 和 status 由系统自动管理，不通过编辑接口修改）
      * @param updateReqVO 更新请求
      */
     @Override
@@ -54,6 +57,8 @@ public class WardServiceImpl implements WardService {
         securityContext.requireAdmin();
         validateWardExists(updateReqVO.getId());
         WardDO updateObj = BeanUtils.toBean(updateReqVO, WardDO.class);
+        updateObj.setUsedBeds(null);
+        updateObj.setStatus(null);
         wardMapper.updateById(updateObj);
     }
 
@@ -109,21 +114,35 @@ public class WardServiceImpl implements WardService {
     public void incrementUsedBeds(Long wardId) {
         int affected = wardMapper.incrementUsedBeds(wardId);
         if (affected == 0) {
-            // SQL 层已校验 id 存在且 used_beds < capacity，affected=0 即条件不满足
             throw exception(WARD_CAPACITY_FULL);
         }
+        updateWardStatus(wardId);
     }
 
-    /**
-     * 递减已用床位数（原子操作：SQL层校验 used_beds > 0）
-     * @param wardId 病房ID
-     */
     @Override
     public void decrementUsedBeds(Long wardId) {
         int affected = wardMapper.decrementUsedBeds(wardId);
         if (affected == 0) {
-            // 已无已占用床位可释放（used_beds 已为 0 或 ward 不存在）
             throw exception(WARD_NO_BED_TO_RELEASE);
+        }
+        updateWardStatus(wardId);
+    }
+
+    /**
+     * 根据已用床位数自动计算病房状态
+     * 规则：usedBeds >= capacity → 已满(1)，否则 → 正常(0)
+     * 维修中(2) 为人工设置，不参与自动计算
+     */
+    private void updateWardStatus(Long wardId) {
+        WardDO ward = wardMapper.selectById(wardId);
+        if (ward == null) return;
+        // 维修中状态不自动覆盖
+        if (ward.getStatus() != null && ward.getStatus() == 2) return;
+        int newStatus = (ward.getUsedBeds() != null && ward.getCapacity() != null
+                && ward.getUsedBeds() >= ward.getCapacity()) ? 1 : 0;
+        if (ward.getStatus() == null || ward.getStatus() != newStatus) {
+            ward.setStatus(newStatus);
+            wardMapper.updateById(ward);
         }
     }
 

@@ -42,7 +42,7 @@
       <el-table-column label="科室" width="100">
         <template #default="{ row }">{{ getDeptName(row.deptId) }}</template>
       </el-table-column>
-      <el-table-column label="就诊时间" prop="visitDate" width="180" />
+      <el-table-column label="就诊时间" width="180"><template #default="{ row }">{{ formatTs(row.visitDate) }}</template></el-table-column>
       <el-table-column label="状态" width="80">
         <template #default="{ row }">
           <el-tag :type="getDictColorType('hospital_visit_status', row.status)">
@@ -52,7 +52,7 @@
       </el-table-column>
       <el-table-column label="就诊原因" prop="reason" min-width="120" show-overflow-tooltip />
       <el-table-column label="诊断" prop="diagnosis" min-width="150" show-overflow-tooltip />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -82,7 +82,7 @@
             <el-option v-for="dept in deptOptions" :key="dept.id" :label="dept.deptName" :value="dept.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="就诊日期" required><el-date-picker v-model="formData.visitDate" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%;" /></el-form-item>
+        <el-form-item label="就诊日期" required><el-date-picker v-model="formData.visitDate" type="datetime" value-format="x" style="width:100%;" /></el-form-item>
         <el-form-item label="就诊原因"><el-input v-model="formData.reason" type="textarea" :rows="2" placeholder="请输入就诊原因" /></el-form-item>
         <el-form-item label="诊断"><el-input v-model="formData.diagnosis" type="textarea" :rows="2" placeholder="请输入诊断结果" /></el-form-item>
         <el-form-item label="备注"><el-input v-model="formData.notes" type="textarea" :rows="2" placeholder="请输入医生备注" /></el-form-item>
@@ -107,7 +107,7 @@ import { getVisitPage, getVisit, createVisit, updateVisit, deleteVisit } from '@
 import { getPatientPage } from '@/api/hospital/patient'
 import { getDoctorPage } from '@/api/hospital/doctor'
 import { getDepartmentPage } from '@/api/hospital/department'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalVisit' })
 

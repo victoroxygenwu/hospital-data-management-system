@@ -21,6 +21,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.VISIT_NOT_EXISTS;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.VISIT_STATUS_ILLEGAL;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_DATA_ACCESS_DENIED;
 
 /**
@@ -48,6 +49,10 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public Long createVisit(VisitSaveReqVO createReqVO) {
         VisitDO visit = BeanUtils.toBean(createReqVO, VisitDO.class);
+        // 后端兜底默认状态为待就诊(0)，避免前端漏传导致状态为空
+        if (visit.getStatus() == null) {
+            visit.setStatus(0);
+        }
         visitMapper.insert(visit);
         return visit.getId();
     }
@@ -58,7 +63,14 @@ public class VisitServiceImpl implements VisitService {
      */
     @Override
     public void updateVisit(VisitSaveReqVO updateReqVO) {
-        validateVisitExists(updateReqVO.getId());
+        VisitDO existing = validateVisitExists(updateReqVO.getId());
+        // 终态守卫：已完成(2) / 已取消(3) 的状态不可再变更
+        // 与本项目处方/账单的专用动作守卫一致，仅在通用 update 上加这一条最小保护
+        Integer from = existing != null ? existing.getStatus() : null;
+        Integer to = updateReqVO.getStatus();
+        if (to != null && from != null && (from == 2 || from == 3) && !from.equals(to)) {
+            throw exception(VISIT_STATUS_ILLEGAL);
+        }
         VisitDO updateObj = BeanUtils.toBean(updateReqVO, VisitDO.class);
         visitMapper.updateById(updateObj);
     }
@@ -130,8 +142,10 @@ public class VisitServiceImpl implements VisitService {
                 new LambdaQueryWrapperX<VisitDO>().eq(VisitDO::getPatientId, patientId).orderByDesc(VisitDO::getVisitDate));
     }
 
-    private void validateVisitExists(Long id) {
-        if (id == null) return;
-        if (visitMapper.selectById(id) == null) throw exception(VISIT_NOT_EXISTS);
+    private VisitDO validateVisitExists(Long id) {
+        if (id == null) return null;
+        VisitDO visit = visitMapper.selectById(id);
+        if (visit == null) throw exception(VISIT_NOT_EXISTS);
+        return visit;
     }
 }

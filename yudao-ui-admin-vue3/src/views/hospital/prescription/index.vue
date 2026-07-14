@@ -2,7 +2,9 @@
   <div class="p-20px">
     <el-form :inline="true" :model="queryParams" class="mb-15px">
       <el-form-item label="就诊ID">
-        <el-input v-model.number="queryParams.visitId" placeholder="请输入就诊ID" clearable @keyup.enter="handleQuery" />
+        <el-select v-model="queryParams.visitId" placeholder="全部就诊" clearable filterable>
+          <el-option v-for="v in visitOptions" :key="v.id" :label="'#' + v.id + ' - 患者' + v.patientId" :value="v.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="queryParams.status" placeholder="全部" clearable>
@@ -31,7 +33,7 @@
         </template>
       </el-table-column>
       <el-table-column label="备注" prop="notes" min-width="150" show-overflow-tooltip />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -47,13 +49,24 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="750px">
       <el-form :model="formData" label-width="100px">
-        <el-form-item label="就诊ID" required><el-input v-model.number="formData.visitId" placeholder="请输入就诊ID" /></el-form-item>
+        <el-form-item label="就诊" required>
+          <el-select v-model="formData.visitId" placeholder="请选择就诊" filterable style="width:100%;">
+            <el-option v-for="v in visitOptions" :key="v.id" :label="'#' + v.id + ' - 患者' + v.patientId + ' - ' + (v.reason || '')" :value="v.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="formData.status" style="width:100%;">
+            <el-option v-for="opt in getIntDictOptions('hospital_prescription_status')" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="备注"><el-input v-model="formData.notes" type="textarea" :rows="2" placeholder="请输入处方备注" /></el-form-item>
         <el-divider content-position="left">处方明细</el-divider>
         <el-table :data="formData.items" border size="small" style="margin-bottom: 10px;">
-          <el-table-column label="药品ID" width="100">
+          <el-table-column label="药品" width="180">
             <template #default="{ row }">
-              <el-input-number v-model="row.medicineId" :min="1" :controls="false" size="small" placeholder="药品ID" />
+              <el-select v-model="row.medicineId" placeholder="选择药品" size="small" filterable style="width:160px;">
+                <el-option v-for="m in medicineOptions" :key="m.id" :label="m.name" :value="m.id" />
+              </el-select>
             </template>
           </el-table-column>
           <el-table-column label="数量" width="80">
@@ -86,7 +99,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPrescriptionPage, getPrescription, createPrescription, updatePrescription, deletePrescription, dispensePrescription } from '@/api/hospital/prescription'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getVisitPage } from '@/api/hospital/visit'
+import { getMedicinePage } from '@/api/hospital/medicine'
+import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalPrescription' })
 
@@ -108,9 +123,19 @@ const formData = reactive({
   id: undefined as any,
   visitId: undefined as any,
   doctorId: undefined as any,
+  status: 0,
   notes: '',
   items: [] as PrescriptionItem[]
 })
+
+const visitOptions = ref<any[]>([])
+const medicineOptions = ref<any[]>([])
+const loadVisits = async () => {
+  try { const res = await getVisitPage({ pageNo: 1, pageSize: 200 }); visitOptions.value = res.list || [] } catch {}
+}
+const loadMedicines = async () => {
+  try { const res = await getMedicinePage({ pageNo: 1, pageSize: 200 }); medicineOptions.value = res.list || [] } catch {}
+}
 
 const addItem = () => {
   formData.items.push({ medicineId: undefined, quantity: 1, instructions: '' })
@@ -136,6 +161,7 @@ const openForm = async (type: string, id?: number) => {
       id: res.id,
       visitId: res.visitId,
       doctorId: res.doctorId,
+      status: res.status ?? 0,
       notes: res.notes || '',
       items: (res.items || []).map((item: any) => ({
         id: item.id,
@@ -145,7 +171,7 @@ const openForm = async (type: string, id?: number) => {
       }))
     })
   } else {
-    Object.assign(formData, { id: undefined, visitId: undefined, doctorId: undefined, notes: '', items: [] })
+    Object.assign(formData, { id: undefined, visitId: undefined, doctorId: undefined, status: 0, notes: '', items: [] })
   }
   dialogVisible.value = true
 }
@@ -172,5 +198,5 @@ const handleDispense = async (id: number) => {
   ElMessage.success('发药成功'); getList()
 }
 
-onMounted(() => { getList() })
+onMounted(() => { getList(); loadVisits(); loadMedicines() })
 </script>

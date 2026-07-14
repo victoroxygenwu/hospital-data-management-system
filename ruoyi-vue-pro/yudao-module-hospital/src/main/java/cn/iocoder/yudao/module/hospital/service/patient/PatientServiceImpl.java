@@ -4,11 +4,25 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.hospital.controller.admin.patient.vo.PatientPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.patient.vo.PatientSaveReqVO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.BedDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.BillDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PatientDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
+import cn.iocoder.yudao.module.hospital.dal.mysql.BedMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PatientMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
+import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
+import cn.iocoder.yudao.module.hospital.service.ward.WardService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
+import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.PATIENT_NOT_EXISTS;
@@ -20,9 +34,21 @@ import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.PATIENT_
 public class PatientServiceImpl implements PatientService {
 
     @Resource
-    private PatientMapper patientMapper; // 患者数据访问
+    private PatientMapper patientMapper;
     @Resource
-    private HospitalSecurityContext securityContext; // 角色权限上下文
+    private VisitMapper visitMapper;
+    @Resource
+    private PrescriptionMapper prescriptionMapper;
+    @Resource
+    private PrescriptionItemMapper prescriptionItemMapper;
+    @Resource
+    private BillMapper billMapper;
+    @Resource
+    private BedMapper bedMapper;
+    @Resource
+    private WardService wardService;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     /**
      * 创建患者
@@ -48,12 +74,39 @@ public class PatientServiceImpl implements PatientService {
     }
 
     /**
-     * 删除患者
+     * 删除患者（级联删除关联的就诊/处方/明细/账单，释放床位）
      * @param id 患者ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePatient(Long id) {
         validatePatientExists(id);
+        // 1. 级联删除就诊及其子表（处方→处方明细→账单）
+        List<VisitDO> visits = visitMapper.selectList(new LambdaQueryWrapper<VisitDO>()
+                .eq(VisitDO::getPatientId, id));
+        for (VisitDO visit : visits) {
+            List<PrescriptionDO> prescriptions = prescriptionMapper.selectList(
+                    new LambdaQueryWrapper<PrescriptionDO>()
+                            .eq(PrescriptionDO::getVisitId, visit.getId()));
+            for (PrescriptionDO p : prescriptions) {
+                prescriptionItemMapper.delete(PrescriptionItemDO::getPrescriptionId, p.getId());
+                prescriptionMapper.deleteById(p.getId());
+            }
+            billMapper.delete(BillDO::getVisitId, visit.getId());
+            visitMapper.deleteById(visit.getId());
+        }
+        // 2. 删除直接关联的账单
+        billMapper.delete(BillDO::getPatientId, id);
+        // 3. 释放床位关联
+        List<BedDO> beds = bedMapper.selectList(new LambdaQueryWrapper<BedDO>()
+                .eq(BedDO::getPatientId, id));
+        for (BedDO bed : beds) {
+            wardService.decrementUsedBeds(bed.getWardId());
+            bed.setStatus(0);
+            bed.setPatientId(null);
+            bedMapper.updateById(bed);
+        }
+        // 4. 删除患者
         patientMapper.deleteById(id);
     }
 

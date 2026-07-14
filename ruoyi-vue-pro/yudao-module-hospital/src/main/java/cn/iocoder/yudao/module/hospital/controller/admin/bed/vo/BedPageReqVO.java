@@ -14,5 +14,5 @@ public class BedPageReqVO extends PageParam {
     @Schema(description = "床位号")
     private String bedNo;
     @Schema(description = "状态")
-    private String status;
+    private Integer status;
 }

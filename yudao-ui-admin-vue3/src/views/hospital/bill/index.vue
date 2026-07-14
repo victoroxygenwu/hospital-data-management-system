@@ -44,9 +44,9 @@
         <template #default="{ row }">{{ row.payMethod ? getDictLabel('hospital_bill_pay_method', row.payMethod) : '-' }}</template>
       </el-table-column>
       <el-table-column label="支付时间" prop="payTime" width="180">
-        <template #default="{ row }">{{ row.payTime || '-' }}</template>
+        <template #default="{ row }">{{ formatTs(row.payTime) || '-' }}</template>
       </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
@@ -67,8 +67,17 @@
             <el-option v-for="p in patientOptions" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="就诊ID"><el-input v-model.number="formData.visitId" placeholder="请输入就诊ID" /></el-form-item>
+        <el-form-item label="就诊ID">
+          <el-select v-model="formData.visitId" placeholder="请选择就诊" filterable style="width:100%;">
+            <el-option v-for="v in visitOptions" :key="v.id" :label="'#' + v.id + ' - 患者' + (v.patientId || '')" :value="v.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="总金额"><el-input-number v-model="formData.totalAmount" :min="0" :precision="2" style="width:100%;" /></el-form-item>
+        <el-form-item label="支付状态">
+          <el-select v-model="formData.status" style="width:100%;">
+            <el-option v-for="opt in getIntDictOptions('hospital_bill_pay_status')" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -97,7 +106,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBillPage, getBill, createBill, updateBill, deleteBill, payBill } from '@/api/hospital/bill'
 import { getPatientPage } from '@/api/hospital/patient'
-import { getIntDictOptions, getDictLabel, getDictColorType } from '@/utils/hospitalDict'
+import { getVisitPage } from '@/api/hospital/visit'
+import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
 
 defineOptions({ name: 'HospitalBill' })
 
@@ -110,6 +120,11 @@ const loadPatients = async () => {
 }
 const getPatientName = (id: number) => patientOptions.value.find(p => p.id === id)?.name || String(id || '')
 
+const visitOptions = ref<any[]>([])
+const loadVisits = async () => {
+  try { const res = await getVisitPage({ pageNo: 1, pageSize: 200 }); visitOptions.value = res.list || [] } catch {}
+}
+
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
@@ -117,7 +132,7 @@ const queryParams = reactive({ pageNo: 1, pageSize: 10, patientId: undefined, st
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
-const formData = reactive({ id: undefined as any, patientId: undefined as any, visitId: undefined as any, totalAmount: 0 })
+const formData = reactive({ id: undefined as any, patientId: undefined as any, visitId: undefined as any, totalAmount: 0, status: 0 })
 const payVisible = ref(false)
 const payBillId = ref<number>()
 const payMethod = ref<string | number>('')
@@ -179,6 +194,7 @@ const submitPay = async () => {
 
 onMounted(async () => {
   await loadPatients()
+  loadVisits()
   getList()
 })
 </script>

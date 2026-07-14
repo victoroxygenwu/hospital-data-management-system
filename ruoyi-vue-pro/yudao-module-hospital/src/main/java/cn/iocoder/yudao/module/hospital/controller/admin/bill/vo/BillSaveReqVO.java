@@ -19,6 +19,6 @@ public class BillSaveReqVO {
     private BigDecimal payAmount;
     @Schema(description = "支付方式：现金/医保/微信")
     private String payMethod;
-    @Schema(description = "状态：未支付/已支付/已退费")
-    private String status;
+    @Schema(description = "状态：0-未支付 1-已支付 2-已退费")
+    private Integer status;
 }

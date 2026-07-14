@@ -4,6 +4,7 @@ import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import java.time.LocalDate;
 
@@ -25,6 +26,7 @@ public class PatientDO extends BaseDO {
     /** 患者姓名 */
     private String name;
     private String gender;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
     private String idCard;
     private String phone;
@@ -33,5 +35,6 @@ public class PatientDO extends BaseDO {
     private String emergencyPhone;
     private String insuranceNo;
     private String medicalHistory;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate admissionDate;
 }

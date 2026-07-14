@@ -30,5 +30,5 @@ public class BillDO extends BaseDO {
     private LocalDateTime payTime;
     private String payMethod;
     /** 支付状态 */
-    private String status;
+    private Integer status;
 }

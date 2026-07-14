@@ -24,6 +24,6 @@ public class PrescriptionDO extends BaseDO {
     /** 开方医生ID */
     private Long doctorId;
     /** 处方状态: 0-待发药 1-已发药 */
-    private String status;
+    private Integer status;
     private String notes;
 }

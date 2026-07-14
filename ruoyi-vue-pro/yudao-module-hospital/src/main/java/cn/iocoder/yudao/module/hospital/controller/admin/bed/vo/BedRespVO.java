@@ -14,7 +14,7 @@ public class BedRespVO {
     @Schema(description = "床位号")
     private String bedNo;
     @Schema(description = "状态")
-    private String status;
+    private Integer status;
     @Schema(description = "当前入住的患者ID")
     private Long patientId;
     @Schema(description = "入住时间")

@@ -4,10 +4,12 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionPageReqVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.prescription.vo.PrescriptionSaveReqVO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.BillDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
+import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
@@ -40,9 +42,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Resource
     private VisitMapper visitMapper; // 就诊数据访问
     @Resource
-    private MedicineService medicineService; // 药品服务
+    private MedicineService medicineService;
     @Resource
-    private HospitalSecurityContext securityContext; // 角色权限上下文
+    private BillMapper billMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     /**
      * 创建处方（含处方明细批量插入）
@@ -201,13 +205,28 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public void dispensePrescription(Long id) {
         PrescriptionDO prescription = prescriptionMapper.selectById(id);
         if (prescription == null) throw exception(PRESCRIPTION_NOT_EXISTS);
-        // 原子状态更新：WHERE status=0 防止并发重复发药
         int affected = prescriptionMapper.dispense(id);
-        if (affected == 0) return; // 已发药，幂等返回
+        if (affected == 0) return;
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(id);
         for (PrescriptionItemDO item : items) {
             medicineService.decrementStock(item.getMedicineId(), item.getQuantity());
         }
+        // 发药后自动生成账单：总金额 = 所有处方明细 (单价 × 数量)
+        VisitDO visit = visitMapper.selectById(prescription.getVisitId());
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (PrescriptionItemDO item : items) {
+            BigDecimal itemTotal = (item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO)
+                    .multiply(BigDecimal.valueOf(item.getQuantity() != null ? item.getQuantity() : 0));
+            totalAmount = totalAmount.add(itemTotal);
+        }
+        BillDO bill = BillDO.builder()
+                .visitId(prescription.getVisitId())
+                .patientId(visit != null ? visit.getPatientId() : null)
+                .totalAmount(totalAmount)
+                .payAmount(BigDecimal.ZERO)
+                .status(0)
+                .build();
+        billMapper.insert(bill);
     }
 
     /**

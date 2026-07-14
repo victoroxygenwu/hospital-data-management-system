@@ -23,6 +23,6 @@ public class VisitSaveReqVO {
     private String diagnosis;
     @Schema(description = "医生备注")
     private String notes;
-    @Schema(description = "状态：待就诊/就诊中/已完成/已取消")
-    private String status;
+    @Schema(description = "状态：0-待就诊 1-就诊中 2-已完成 3-已取消")
+    private Integer status;
 }

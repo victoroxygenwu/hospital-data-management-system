@@ -24,7 +24,7 @@ public class BedDO extends BaseDO {
     private Long wardId;
     private String bedNo;
     /** 床位状态: 0-空闲 1-占用 */
-    private String status;
+    private Integer status;
     /** 入住患者ID */
     private Long patientId;
     private LocalDateTime admissionTime;

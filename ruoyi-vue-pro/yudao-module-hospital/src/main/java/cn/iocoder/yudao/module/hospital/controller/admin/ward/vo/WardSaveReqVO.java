@@ -18,10 +18,8 @@ public class WardSaveReqVO {
     @Schema(description = "病房总床位数", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "总床位数不能为空")
     private Integer capacity;
-    @Schema(description = "已使用床位数")
-    private Integer usedBeds;
-    @Schema(description = "病房状态：1可用/0停用")
-    private Integer status;
     @Schema(description = "描述")
     private String description;
+    // 注意：usedBeds 和 status 不在此 VO 中，
+    // usedBeds 由床位分配/释放自动计算，status 由 usedBeds/capacity 自动推算
 }

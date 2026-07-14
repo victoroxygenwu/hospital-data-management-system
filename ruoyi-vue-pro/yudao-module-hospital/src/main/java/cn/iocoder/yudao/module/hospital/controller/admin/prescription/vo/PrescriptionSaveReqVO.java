@@ -13,8 +13,8 @@ public class PrescriptionSaveReqVO {
     private Long visitId;
     @Schema(description = "开方医生ID")
     private Long doctorId;
-    @Schema(description = "状态：未发药/已发药/已过期")
-    private String status;
+    @Schema(description = "状态：0-待发药 1-已发药")
+    private Integer status;
     @Schema(description = "处方备注")
     private String notes;
     @Schema(description = "处方明细列表")
