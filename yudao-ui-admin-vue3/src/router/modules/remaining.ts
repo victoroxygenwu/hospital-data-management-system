@@ -92,7 +92,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
       },
       {
         path: 'notify-message',
-        component: () => import('@/views/system/notify/my/index.vue'),
+        component: () => import('@/views/.archived/system/notify/my/index.vue'),
         name: 'MyNotifyMessage',
         meta: {
           canTo: true,
@@ -137,7 +137,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
     children: [
       {
         path: 'edit',
-        component: () => import('@/views/infra/codegen/EditTable.vue'),
+        component: () => import('@/views/.archived/infra/codegen/EditTable.vue'),
         name: 'InfraCodegenEditTable',
         meta: {
           noCache: true,
@@ -160,7 +160,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
     children: [
       {
         path: 'job-log',
-        component: () => import('@/views/infra/job/logger/index.vue'),
+        component: () => import('@/views/.archived/infra/job/logger/index.vue'),
         name: 'InfraJobLog',
         meta: {
           noCache: true,
