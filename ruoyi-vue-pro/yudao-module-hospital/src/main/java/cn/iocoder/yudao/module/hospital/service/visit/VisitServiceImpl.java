@@ -18,6 +18,7 @@ import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -50,10 +51,26 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public Long createVisit(VisitSaveReqVO createReqVO) {
         VisitDO visit = BeanUtils.toBean(createReqVO, VisitDO.class);
+        // 身份绑定：医生/患者登录建档时，强制归属到当前登录身份（防止越权冒用他人 id）
+        if (!securityContext.isAdmin()) {
+            Long doctorId = securityContext.getCurrentDoctorId();
+            if (doctorId != null) {
+                visit.setDoctorId(doctorId);
+            }
+            Long patientId = securityContext.getCurrentPatientId();
+            if (patientId != null) {
+                visit.setPatientId(patientId);
+            }
+        }
         // 后端兜底默认状态为待就诊(0)，避免前端漏传导致状态为空
         if (visit.getStatus() == null) {
-            // 兜底默认状态为待就诊，避免前端漏传导致状态为空
             visit.setStatus(VisitStatusEnum.PENDING.getStatus());
+        }
+        // 就诊时间兜底：为空或落在 epoch 边界（日期反序列化失败时会产生 1970 值，
+        // 低于 TIMESTAMP 最小范围导致插入报错）时取当前时间
+        LocalDateTime vd = visit.getVisitDate();
+        if (vd == null || vd.getYear() <= 1970) {
+            visit.setVisitDate(LocalDateTime.now());
         }
         visitMapper.insert(visit);
         return visit.getId();

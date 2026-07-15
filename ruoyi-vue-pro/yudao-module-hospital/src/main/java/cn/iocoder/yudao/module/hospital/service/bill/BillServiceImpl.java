@@ -93,6 +93,13 @@ public class BillServiceImpl implements BillService {
     public void payBill(Long id, String payMethod) {
         BillDO bill = billMapper.selectById(id);
         if (bill == null) throw exception(BILL_NOT_EXISTS);
+        // 数据隔离：非管理员只能支付本人账单，越权支付直接拒绝
+        if (!securityContext.isAdmin()) {
+            Long patientId = securityContext.getCurrentPatientId();
+            if (patientId != null && !patientId.equals(bill.getPatientId())) {
+                throw exception(HOSPITAL_DATA_ACCESS_DENIED);
+            }
+        }
         // 条件更新：仅当 status=0 时支付，pay_amount 直接取 total_amount 列；影响行数 0 表示已支付
         int affected = billMapper.payBill(id, payMethod);
         if (affected == 0) throw exception(BILL_ALREADY_PAID);

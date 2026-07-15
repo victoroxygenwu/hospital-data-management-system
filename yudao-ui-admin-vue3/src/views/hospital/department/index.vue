@@ -16,7 +16,7 @@
 
     <!-- 操作栏 -->
     <div class="mb-15px">
-      <el-button type="primary" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
+      <el-button type="primary" v-hasPermi="['hospital:department:create']" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
     </div>
 
     <!-- 列表 -->
@@ -30,8 +30,8 @@
       <el-table-column label="创建时间" prop="createTime" width="180" />
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+          <el-button link type="primary" v-hasPermi="['hospital:department:update']" @click="openForm('update', row.id)">编辑</el-button>
+          <el-button link type="danger" v-hasPermi="['hospital:department:delete']" @click="handleDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

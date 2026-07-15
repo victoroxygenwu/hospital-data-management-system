@@ -1,7 +1,7 @@
 <template>
   <div class="p-20px">
     <el-form :inline="true" :model="queryParams" class="mb-15px">
-      <el-form-item label="患者">
+      <el-form-item label="患者" v-if="checkPermi(['hospital:patient:query'])">
         <el-select v-model="queryParams.patientId" placeholder="全部患者" clearable filterable>
           <el-option v-for="p in patientOptions" :key="p.id" :label="p.name" :value="p.id" />
         </el-select>
@@ -18,12 +18,12 @@
     </el-form>
 
     <div class="mb-15px">
-      <el-button type="primary" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
+      <el-button type="primary" v-hasPermi="['hospital:bill:create']" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
     </div>
 
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column label="ID" prop="id" width="80" />
-      <el-table-column label="患者" width="100">
+      <el-table-column label="患者" width="100" v-if="checkPermi(['hospital:patient:query'])">
         <template #default="{ row }">{{ getPatientName(row.patientId) }}</template>
       </el-table-column>
       <el-table-column label="就诊ID" prop="visitId" width="80" />
@@ -49,8 +49,8 @@
       <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+          <el-button link type="primary" v-hasPermi="['hospital:bill:update']" @click="openForm('update', row.id)">编辑</el-button>
+          <el-button link type="danger" v-hasPermi="['hospital:bill:delete']" @click="handleDelete(row.id)">删除</el-button>
           <el-button v-if="row.status === 0 || row.status === '0'" link type="success" @click="handlePay(row.id)">支付</el-button>
         </template>
       </el-table-column>
@@ -62,7 +62,7 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="formData" label-width="100px">
-        <el-form-item label="患者" required>
+        <el-form-item label="患者" required v-if="checkPermi(['hospital:patient:query'])">
           <el-select v-model="formData.patientId" placeholder="请选择患者" filterable style="width:100%;">
             <el-option v-for="p in patientOptions" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
@@ -108,11 +108,15 @@ import { getBillPage, getBill, createBill, updateBill, deleteBill, payBill } fro
 import { getPatientPage } from '@/api/hospital/patient'
 import { getVisitPage } from '@/api/hospital/visit'
 import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
+import { checkPermi } from '@/utils/permission'
 
 defineOptions({ name: 'HospitalBill' })
 
 const patientOptions = ref<{ id: number; name: string }[]>([])
+// 患者无 hospital:patient:query（PatientRespVO 含身份证/电话等隐私），直接跳过，
+// 既避免 403 弹窗，也避免泄露他人隐私。
 const loadPatients = async () => {
+  if (!checkPermi(['hospital:patient:query'])) return
   try {
     const res = await getPatientPage({ pageNo: 1, pageSize: 200 })
     patientOptions.value = (res.list || []).map((p: any) => ({ id: p.id, name: p.name }))

@@ -54,6 +54,7 @@ public class StatsServiceImpl implements StatsService {
                 .le(endDate != null, VisitDO::getVisitDate, endDate + " 23:59:59")
                 .orderByAsc(VisitDO::getVisitDate));
         Map<String, Long> grouped = visits.stream()
+                .filter(v -> v.getVisitDate() != null)
                 .collect(Collectors.groupingBy(v -> v.getVisitDate().toLocalDate().toString(), Collectors.counting()));
         return grouped.entrySet().stream()
                 .map(e -> VisitTrendVO.builder().date(e.getKey()).count(e.getValue()).build())
@@ -76,7 +77,8 @@ public class StatsServiceImpl implements StatsService {
                 .wardNo(ward.getWardNo())
                 .capacity(ward.getCapacity())
                 .usedBeds(ward.getUsedBeds())
-                .usageRate(ward.getCapacity() > 0
+                .usageRate(ward.getCapacity() != null && ward.getCapacity() > 0
+                        && ward.getUsedBeds() != null
                         ? String.format("%.1f%%", ward.getUsedBeds() * 100.0 / ward.getCapacity()) : "0%")
                 .build()).collect(Collectors.toList());
     }

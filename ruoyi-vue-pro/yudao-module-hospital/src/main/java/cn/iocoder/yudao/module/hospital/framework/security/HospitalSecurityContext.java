@@ -27,11 +27,15 @@ public class HospitalSecurityContext {
 
     /**
      * 当前用户是否为管理员（管理员可以看到全部数据）
+     *
+     * 说明：yudao 后台账号（system_users）登录后 LoginUser.userType 统一为 ADMIN(2)，
+     * 无法据此区分医生/患者/管理员。因此这里改为按业务身份判定——
+     * 只有「既未关联医生档案、也未关联患者档案」的后台账号才视为管理员。
      */
     public boolean isAdmin() {
         LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
         if (loginUser == null) return false;
-        return loginUser.getUserType() != null && loginUser.getUserType() <= 2;
+        return getCurrentDoctorId() == null && getCurrentPatientId() == null;
     }
 
     /**

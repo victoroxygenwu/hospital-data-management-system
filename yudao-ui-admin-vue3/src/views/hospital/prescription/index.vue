@@ -18,7 +18,7 @@
     </el-form>
 
     <div class="mb-15px">
-      <el-button type="primary" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
+      <el-button type="primary" v-hasPermi="['hospital:prescription:create']" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
     </div>
 
     <el-table v-loading="loading" :data="list" border stripe>
@@ -36,9 +36,9 @@
       <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          <el-button v-if="row.status === 0 || row.status === '0'" link type="success" @click="handleDispense(row.id)">发药</el-button>
+          <el-button link type="primary" v-hasPermi="['hospital:prescription:update']" @click="openForm('update', row.id)">编辑</el-button>
+          <el-button link type="danger" v-hasPermi="['hospital:prescription:delete']" @click="handleDelete(row.id)">删除</el-button>
+          <el-button v-if="row.status === 0 || row.status === '0'" v-hasPermi="['hospital:prescription:dispense']" link type="success" @click="handleDispense(row.id)">发药</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -102,6 +102,7 @@ import { getPrescriptionPage, getPrescription, createPrescription, updatePrescri
 import { getVisitPage } from '@/api/hospital/visit'
 import { getMedicinePage } from '@/api/hospital/medicine'
 import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
+import { checkPermi } from '@/utils/permission'
 
 defineOptions({ name: 'HospitalPrescription' })
 
@@ -130,10 +131,13 @@ const formData = reactive({
 
 const visitOptions = ref<any[]>([])
 const medicineOptions = ref<any[]>([])
+// 按权限加载下拉选项：缺对应 :query 权限时跳过，避免 403 弹窗
 const loadVisits = async () => {
+  if (!checkPermi(['hospital:visit:query'])) return
   try { const res = await getVisitPage({ pageNo: 1, pageSize: 200 }); visitOptions.value = res.list || [] } catch {}
 }
 const loadMedicines = async () => {
+  if (!checkPermi(['hospital:medicine:query'])) return
   try { const res = await getMedicinePage({ pageNo: 1, pageSize: 200 }); medicineOptions.value = res.list || [] } catch {}
 }
 

@@ -21,7 +21,7 @@
     </el-form>
 
     <div class="mb-15px">
-      <el-button type="primary" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
+      <el-button type="primary" v-hasPermi="['hospital:bed:create']" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
     </div>
 
     <el-table v-loading="loading" :data="list" border stripe>
@@ -48,10 +48,10 @@
       <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="250" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          <el-button v-if="row.status === 0 || row.status === '0'" link type="success" @click="handleAssign(row.id)">分配</el-button>
-          <el-button v-if="row.status === 1 || row.status === '1'" link type="warning" @click="handleRelease(row.id)">释放</el-button>
+          <el-button link type="primary" v-hasPermi="['hospital:bed:update']" @click="openForm('update', row.id)">编辑</el-button>
+          <el-button link type="danger" v-hasPermi="['hospital:bed:delete']" @click="handleDelete(row.id)">删除</el-button>
+          <el-button v-if="row.status === 0 || row.status === '0'" v-hasPermi="['hospital:bed:assign']" link type="success" @click="handleAssign(row.id)">分配</el-button>
+          <el-button v-if="row.status === 1 || row.status === '1'" v-hasPermi="['hospital:bed:release']" link type="warning" @click="handleRelease(row.id)">释放</el-button>
         </template>
       </el-table-column>
     </el-table>

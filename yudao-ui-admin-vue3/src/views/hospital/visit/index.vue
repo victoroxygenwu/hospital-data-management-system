@@ -28,12 +28,12 @@
     </el-form>
 
     <div class="mb-15px">
-      <el-button type="primary" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
+      <el-button type="primary" v-hasPermi="['hospital:visit:create']" @click="openForm('create')"><Icon icon="ep:plus" class="mr-5px" />新增</el-button>
     </div>
 
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column label="ID" prop="id" width="80" />
-      <el-table-column label="患者" width="100">
+      <el-table-column label="患者" width="100" v-if="checkPermi(['hospital:patient:query'])">
         <template #default="{ row }">{{ getPatientName(row.patientId) }}</template>
       </el-table-column>
       <el-table-column label="医生" width="100">
@@ -55,8 +55,8 @@
       <el-table-column label="创建时间" width="180"><template #default="{ row }">{{ formatTs(row.createTime) }}</template></el-table-column>
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openForm('update', row.id)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+          <el-button link type="primary" v-hasPermi="['hospital:visit:update']" @click="openForm('update', row.id)">编辑</el-button>
+          <el-button link type="danger" v-hasPermi="['hospital:visit:delete']" @click="handleDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -108,6 +108,7 @@ import { getPatientPage } from '@/api/hospital/patient'
 import { getDoctorPage } from '@/api/hospital/doctor'
 import { getDepartmentPage } from '@/api/hospital/department'
 import { getIntDictOptions, getDictLabel, getDictColorType, formatTs } from '@/utils/hospitalDict'
+import { checkPermi } from '@/utils/permission'
 
 defineOptions({ name: 'HospitalVisit' })
 
@@ -115,17 +116,32 @@ const patientOptions = ref<{ id: number; name: string }[]>([])
 const doctorOptions = ref<{ id: number; name: string }[]>([])
 const deptOptions = ref<{ id: number; deptName: string }[]>([])
 
+// 按权限加载下拉选项：缺少对应 :query 权限时直接跳过该接口，
+// 避免后端返回 403 触发"没有该操作权限"弹窗（如患者无 patient:query）。
 const loadOptions = async () => {
-  try {
-    const [pRes, dRes, deptRes] = await Promise.all([
-      getPatientPage({ pageNo: 1, pageSize: 200 }),
-      getDoctorPage({ pageNo: 1, pageSize: 200 }),
-      getDepartmentPage({ pageNo: 1, pageSize: 200 })
-    ])
-    patientOptions.value = (pRes.list || []).map((p: any) => ({ id: p.id, name: p.name }))
-    doctorOptions.value = (dRes.list || []).map((d: any) => ({ id: d.id, name: d.name }))
-    deptOptions.value = (deptRes.list || []).map((d: any) => ({ id: d.id, deptName: d.deptName }))
-  } catch { /* ignore */ }
+  const tasks: Promise<void>[] = []
+  if (checkPermi(['hospital:patient:query'])) {
+    tasks.push(
+      getPatientPage({ pageNo: 1, pageSize: 200 }).then((res) => {
+        patientOptions.value = (res.list || []).map((p: any) => ({ id: p.id, name: p.name }))
+      })
+    )
+  }
+  if (checkPermi(['hospital:doctor:query'])) {
+    tasks.push(
+      getDoctorPage({ pageNo: 1, pageSize: 200 }).then((res) => {
+        doctorOptions.value = (res.list || []).map((d: any) => ({ id: d.id, name: d.name }))
+      })
+    )
+  }
+  if (checkPermi(['hospital:department:query'])) {
+    tasks.push(
+      getDepartmentPage({ pageNo: 1, pageSize: 200 }).then((res) => {
+        deptOptions.value = (res.list || []).map((d: any) => ({ id: d.id, deptName: d.deptName }))
+      })
+    )
+  }
+  try { await Promise.all(tasks) } catch { /* 缺权限的接口已跳过，其余忽略 */ }
 }
 
 const getPatientName = (id: number) => patientOptions.value.find(p => p.id === id)?.name || String(id || '')

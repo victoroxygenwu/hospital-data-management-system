@@ -58,6 +58,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Transactional(rollbackFor = Exception.class)
     public Long createPrescription(PrescriptionSaveReqVO createReqVO) {
         PrescriptionDO prescription = BeanUtils.toBean(createReqVO, PrescriptionDO.class);
+        // 身份绑定：医生登录开方时，强制归属到当前登录医生，防止越权冒用他人医生 id
+        if (!securityContext.isAdmin()) {
+            Long doctorId = securityContext.getCurrentDoctorId();
+            if (doctorId != null) {
+                prescription.setDoctorId(doctorId);
+            }
+        }
         prescriptionMapper.insert(prescription);
         if (createReqVO.getItems() == null || createReqVO.getItems().isEmpty()) {
             return prescription.getId();
