@@ -133,14 +133,12 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public PageResult<VisitDO> getVisitPage(VisitPageReqVO pageReqVO) {
         // 角色数据隔离：医生只看自己的患者，患者只看自己的记录
-        if (!securityContext.isAdmin()) {
-            Long doctorId = securityContext.getCurrentDoctorId();
-            Long patientId = securityContext.getCurrentPatientId();
-            if (doctorId != null) {
-                pageReqVO.setDoctorId(doctorId);
-            } else if (patientId != null) {
-                pageReqVO.setPatientId(patientId);
-            }
+        Long doctorId = securityContext.resolveDoctorScope();
+        Long patientId = securityContext.resolvePatientScope();
+        if (doctorId != null) {
+            pageReqVO.setDoctorId(doctorId);
+        } else if (patientId != null) {
+            pageReqVO.setPatientId(patientId);
         }
         return visitMapper.selectPage(pageReqVO);
     }

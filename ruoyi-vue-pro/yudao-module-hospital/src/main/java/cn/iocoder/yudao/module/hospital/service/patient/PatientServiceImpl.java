@@ -57,6 +57,7 @@ public class PatientServiceImpl implements PatientService {
      */
     @Override
     public Long createPatient(PatientSaveReqVO createReqVO) {
+        securityContext.requireAdmin(); // 患者档案由管理员录入，避免匿名建档（与 createDoctor 一致）
         PatientDO patient = BeanUtils.toBean(createReqVO, PatientDO.class);
         patientMapper.insert(patient);
         return patient.getId();
@@ -128,11 +129,9 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PageResult<PatientDO> getPatientPage(PatientPageReqVO pageReqVO) {
         // 角色数据隔离：患者只能看到自己的档案，走正常分页
-        if (!securityContext.isAdmin()) {
-            Long patientId = securityContext.getCurrentPatientId();
-            if (patientId != null) {
-                pageReqVO.setId(patientId);
-            }
+        Long patientId = securityContext.resolvePatientScope();
+        if (patientId != null) {
+            pageReqVO.setId(patientId);
         }
         return patientMapper.selectPage(pageReqVO);
     }

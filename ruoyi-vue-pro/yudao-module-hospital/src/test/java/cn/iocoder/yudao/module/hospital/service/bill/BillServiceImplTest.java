@@ -42,6 +42,7 @@ class BillServiceImplTest {
         BillDO bill = new BillDO();
         bill.setId(1L);
         bill.setStatus(BillStatusEnum.UNPAID.getStatus());
+        when(securityContext.isAdmin()).thenReturn(true); // 管理员支付，跳过越权校验，聚焦支付逻辑
         when(billMapper.selectById(1L)).thenReturn(bill);
         when(billMapper.payBill(1L, "微信")).thenReturn(1);
 
@@ -55,6 +56,7 @@ class BillServiceImplTest {
         BillDO bill = new BillDO();
         bill.setId(1L);
         bill.setStatus(BillStatusEnum.UNPAID.getStatus());
+        when(securityContext.isAdmin()).thenReturn(true); // 管理员支付，跳过越权校验，聚焦幂等逻辑
         when(billMapper.selectById(1L)).thenReturn(bill);
         // 模拟已支付：WHERE status=0 条件不满足，影响行数=0
         when(billMapper.payBill(1L, "微信")).thenReturn(0);

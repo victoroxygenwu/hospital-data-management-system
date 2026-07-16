@@ -75,4 +75,21 @@ public class HospitalSecurityContext {
     public Long getCurrentUserId() {
         return SecurityFrameworkUtils.getLoginUserId();
     }
+
+    /**
+     * 解析"患者可查看范围"：返回当前登录患者 ID；管理员或身份未知时返回 null。
+     * null 语义 = 可见全部数据。用于分页查询时强制过滤，
+     * 消除各 Service 中重复的 isAdmin()+getCurrentPatientId() 分支。
+     */
+    public Long resolvePatientScope() {
+        return isAdmin() ? null : getCurrentPatientId();
+    }
+
+    /**
+     * 解析"医生可查看范围"：返回当前登录医生 ID；管理员或身份未知时返回 null。
+     * null 语义 = 可见全部数据。用于分页查询时强制过滤。
+     */
+    public Long resolveDoctorScope() {
+        return isAdmin() ? null : getCurrentDoctorId();
+    }
 }

@@ -9,7 +9,7 @@ import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.PrescriptionItemDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.VisitDO;
-import cn.iocoder.yudao.module.hospital.enums.PrescriptionStatusEnum;
+import cn.iocoder.yudao.module.hospital.enums.BillStatusEnum;
 import cn.iocoder.yudao.module.hospital.dal.mysql.BillMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionItemMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
@@ -183,22 +183,20 @@ public class PrescriptionServiceImpl implements PrescriptionService {
      */
     @Override
     public PageResult<PrescriptionDO> getPrescriptionPage(PrescriptionPageReqVO pageReqVO) {
-        if (!securityContext.isAdmin()) {
-            Long doctorId = securityContext.getCurrentDoctorId();
-            if (doctorId != null) {
-                pageReqVO.setDoctorId(doctorId);
-            } else {
-                Long patientId = securityContext.getCurrentPatientId();
-                if (patientId != null) {
-                    // 患者只看到与自己就诊关联的处方
-                    List<VisitDO> visits = visitMapper.selectList(
-                            new LambdaQueryWrapperX<VisitDO>().eq(VisitDO::getPatientId, patientId));
-                    if (visits.isEmpty()) {
-                        return PageResult.empty();
-                    }
-                    List<Long> visitIds = visits.stream().map(VisitDO::getId).collect(Collectors.toList());
-                    return prescriptionMapper.selectPageByVisitIds(pageReqVO, visitIds);
+        Long doctorId = securityContext.resolveDoctorScope();
+        if (doctorId != null) {
+            pageReqVO.setDoctorId(doctorId);
+        } else {
+            Long patientId = securityContext.resolvePatientScope();
+            if (patientId != null) {
+                // 患者只看到与自己就诊关联的处方
+                List<VisitDO> visits = visitMapper.selectList(
+                        new LambdaQueryWrapperX<VisitDO>().eq(VisitDO::getPatientId, patientId));
+                if (visits.isEmpty()) {
+                    return PageResult.empty();
                 }
+                List<Long> visitIds = visits.stream().map(VisitDO::getId).collect(Collectors.toList());
+                return prescriptionMapper.selectPageByVisitIds(pageReqVO, visitIds);
             }
         }
         return prescriptionMapper.selectPage(pageReqVO);
@@ -232,7 +230,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .patientId(visit != null ? visit.getPatientId() : null)
                 .totalAmount(totalAmount)
                 .payAmount(BigDecimal.ZERO)
-                .status(PrescriptionStatusEnum.UNDISPENSED.getStatus())
+                .status(BillStatusEnum.UNPAID.getStatus())
                 .build();
         billMapper.insert(bill);
     }

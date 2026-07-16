@@ -13,12 +13,14 @@ import cn.iocoder.yudao.module.hospital.dal.mysql.WardMapper;
 import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_DATA_ACCESS_DENIED;
 
 /**
  * 统计 Service 实现类
@@ -47,7 +49,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<VisitTrendVO> getVisitTrend(String startDate, String endDate) {
         if (!securityContext.isAdmin()) {
-            return Collections.emptyList();
+            throw exception(HOSPITAL_DATA_ACCESS_DENIED);
         }
         List<VisitDO> visits = visitMapper.selectList(new LambdaQueryWrapperX<VisitDO>()
                 .ge(startDate != null, VisitDO::getVisitDate, startDate + " 00:00:00")
@@ -69,7 +71,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<WardUsageVO> getWardUsage() {
         if (!securityContext.isAdmin()) {
-            return Collections.emptyList();
+            throw exception(HOSPITAL_DATA_ACCESS_DENIED);
         }
         List<WardDO> wards = wardMapper.selectList(new LambdaQueryWrapperX<>());
         return wards.stream().map(ward -> WardUsageVO.builder()
@@ -90,7 +92,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<MedicineStockVO> getMedicineStock() {
         if (!securityContext.isAdmin()) {
-            return Collections.emptyList();
+            throw exception(HOSPITAL_DATA_ACCESS_DENIED);
         }
         List<MedicineDO> medicines = medicineMapper.selectList(
                 new LambdaQueryWrapperX<MedicineDO>().orderByAsc(MedicineDO::getStock));

@@ -75,11 +75,9 @@ public class BillServiceImpl implements BillService {
     @Override
     public PageResult<BillDO> getBillPage(BillPageReqVO pageReqVO) {
         // 角色数据隔离：患者只看自己的账单
-        if (!securityContext.isAdmin()) {
-            Long patientId = securityContext.getCurrentPatientId();
-            if (patientId != null) {
-                pageReqVO.setPatientId(patientId);
-            }
+        Long patientId = securityContext.resolvePatientScope();
+        if (patientId != null) {
+            pageReqVO.setPatientId(patientId);
         }
         return billMapper.selectPage(pageReqVO);
     }
