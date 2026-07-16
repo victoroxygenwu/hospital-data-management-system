@@ -46,7 +46,7 @@ hospital-data-management-system/
 ├── yudao-ui-admin-vue3/               # 前端（Vue 3）
 ├── sql/                               # 数据库初始化脚本
 │   ├── mysql/                         # MySQL 建表 & 初始数据
-│   └── db2/                           # OpenGauss 建表 & 初始数据
+│   └── opengauss/                     # OpenGauss 建表 & 初始数据
 └── 文档/                              # 项目文档
     ├── 智能医院管理系统-总体设计文档.md
     ├── 系统扩展功能设计文档.md
@@ -74,7 +74,7 @@ hospital-data-management-system/
 docker-compose up -d
 
 # 2. 导入数据库脚本（建表 + 初始数据）
-# 在 OpenGauss 中执行 sql/db2/ 下的 SQL 文件
+# 在 OpenGauss 中执行 sql/opengauss/ 下的 SQL 文件
 
 # 3. 启动后端（默认端口 48080）
 cd ruoyi-vue-pro
