@@ -24,15 +24,21 @@ hs_err_pid*
 replay_pid*
 
 # =============================================
-# 医院项目 - 不用的数据库 SQL 目录（仅用 OpenGauss）
+# 医院项目 - 不用的数据库 SQL 目录
+# 项目仅用 MySQL / OpenGauss（实际运行 MySQL，课程目标 OpenGauss），其余库的适配脚本不进仓库
+# 注：路径须带 ruoyi-vue-pro/ 前缀，否则匹配不到实际位置（曾误跟踪，已 git rm --cached 清理）
 # =============================================
-sql/dm/
-sql/oracle/
-sql/postgresql/
-sql/sqlserver/
-sql/kingbase/
-sql/db2/
+ruoyi-vue-pro/sql/dm/
+ruoyi-vue-pro/sql/oracle/
+ruoyi-vue-pro/sql/postgresql/
+ruoyi-vue-pro/sql/sqlserver/
+ruoyi-vue-pro/sql/kingbase/
+ruoyi-vue-pro/sql/db2/
 sql/tools/
+
+# 框架文档截图（仅框架 README 引用，非本项目所需，已 git rm --cached 清理）
+ruoyi-vue-pro/.image/
+yudao-ui-admin-vue3/.image/
 
 # IDE
 .idea/
