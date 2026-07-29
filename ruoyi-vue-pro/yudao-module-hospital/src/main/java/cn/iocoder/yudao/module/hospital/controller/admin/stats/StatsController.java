@@ -4,6 +4,8 @@ import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.VisitTrendVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.WardUsageVO;
 import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.MedicineStockVO;
+import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.TodaySummaryVO;
+import cn.iocoder.yudao.module.hospital.controller.admin.stats.vo.DeptRankVO;
 import cn.iocoder.yudao.module.hospital.service.stats.StatsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,5 +59,19 @@ public class StatsController {
     @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
     public CommonResult<List<MedicineStockVO>> getMedicineStock() {
         return success(statsService.getMedicineStock());
+    }
+
+    @GetMapping("/today-summary")
+    @Operation(summary = "今日概览")
+    @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
+    public CommonResult<TodaySummaryVO> getTodaySummary() {
+        return success(statsService.getTodaySummary());
+    }
+
+    @GetMapping("/dept-rank")
+    @Operation(summary = "科室接诊排行")
+    @PreAuthorize("@ss.hasPermission('hospital:stats:query')")
+    public CommonResult<List<DeptRankVO>> getDeptRank() {
+        return success(statsService.getDeptRank());
     }
 }

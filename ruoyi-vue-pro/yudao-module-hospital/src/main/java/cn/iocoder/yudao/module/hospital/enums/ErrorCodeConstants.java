@@ -40,6 +40,18 @@ public interface ErrorCodeConstants {
     ErrorCode BILL_NOT_EXISTS = new ErrorCode(1_100_009_000, "账单不存在");
     ErrorCode BILL_ALREADY_PAID = new ErrorCode(1_100_009_001, "账单已支付");
 
+    // ========== 疾病 1-100-010-000 ==========
+    ErrorCode DISEASE_NOT_EXISTS = new ErrorCode(1_100_010_000, "疾病不存在");
+
+    // ========== 症状 1-100-011-000 ==========
+    ErrorCode SYMPTOM_NOT_EXISTS = new ErrorCode(1_100_011_000, "症状不存在");
+
+    // ========== 疾病-症状关联 1-100-012-000 ==========
+    ErrorCode DISEASE_SYMPTOM_NOT_EXISTS = new ErrorCode(1_100_012_000, "疾病-症状关联不存在");
+
+    // ========== 疾病-药品关联 1-100-013-000 ==========
+    ErrorCode DISEASE_MEDICINE_NOT_EXISTS = new ErrorCode(1_100_013_000, "疾病-药品关联不存在");
+
     // ========== 通用 1-100-999-000 ==========
     ErrorCode HOSPITAL_PERMISSION_DENIED = new ErrorCode(1_100_999_000, "无权限执行此操作");
     ErrorCode HOSPITAL_DATA_ACCESS_DENIED = new ErrorCode(1_100_999_001, "无权访问该数据");

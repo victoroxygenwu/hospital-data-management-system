@@ -26,7 +26,7 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 SET NAMES utf8mb4;
-USE ruoyi_vue_pro;
+USE hospital;
 
 -- ---------- 1) 清空（子表先于父表） ----------
 DELETE FROM hospital_prescription_item;

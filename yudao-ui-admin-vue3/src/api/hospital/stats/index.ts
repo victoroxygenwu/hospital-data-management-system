@@ -14,3 +14,13 @@ export const getWardUsage = () => {
 export const getMedicineStock = () => {
   return request.get({ url: '/hospital/stats/medicine-stock' })
 }
+
+// 今日概览
+export const getTodaySummary = () => {
+  return request.get({ url: '/hospital/stats/today-summary' })
+}
+
+// 科室接诊排行
+export const getDeptRank = () => {
+  return request.get({ url: '/hospital/stats/dept-rank' })
+}

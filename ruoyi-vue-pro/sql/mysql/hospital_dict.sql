@@ -1,5 +1,7 @@
 -- 医院管理系统数据字典
--- 执行方式: mysql -u root -p123456 ruoyi_vue_pro < hospital_dict.sql
+-- 执行方式: mysql -u root -p123456 hospital < hospital_dict.sql
+DELETE FROM system_dict_data WHERE dict_type LIKE 'hospital_%';
+DELETE FROM system_dict_type WHERE type LIKE 'hospital_%';
 
 -- ============ 字典类型 ============
 INSERT IGNORE INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`) VALUES

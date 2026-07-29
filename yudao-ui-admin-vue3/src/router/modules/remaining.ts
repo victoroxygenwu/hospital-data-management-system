@@ -90,18 +90,18 @@ const remainingRouter: AppRouteRecordRaw[] = [
           title: t('common.profile')
         }
       },
-      {
-        path: 'notify-message',
-        component: () => import('@/views/.archived/system/notify/my/index.vue'),
-        name: 'MyNotifyMessage',
-        meta: {
-          canTo: true,
-          hidden: true,
-          noTagsView: false,
-          icon: 'ep:message',
-          title: '我的站内信'
-        }
-      }
+      //{
+        //path: 'notify-message',
+        //component: () => import('@/views/.archived/system/notify/my/index.vue'),
+        //name: 'MyNotifyMessage',
+        //meta: {
+          //canTo: true,
+          //hidden: true,
+          //noTagsView: false,
+          //icon: 'ep:message',
+          //title: '我的站内信'
+        //}
+      //}
     ]
   },
   {
@@ -134,21 +134,21 @@ const remainingRouter: AppRouteRecordRaw[] = [
     meta: {
       hidden: true
     },
-    children: [
-      {
-        path: 'edit',
-        component: () => import('@/views/.archived/infra/codegen/EditTable.vue'),
-        name: 'InfraCodegenEditTable',
-        meta: {
-          noCache: true,
-          hidden: true,
-          canTo: true,
-          icon: 'ep:edit',
-          title: '修改生成配置',
-          activeMenu: 'infra/codegen/index'
-        }
-      }
-    ]
+    //children: [
+      //{
+        //path: 'edit',
+        //component: () => import('@/views/.archived/infra/codegen/EditTable.vue'),
+        //name: 'InfraCodegenEditTable',
+        //meta: {
+          //noCache: true,
+          //hidden: true,
+          //canTo: true,
+          //icon: 'ep:edit',
+          //title: '修改生成配置',
+          //activeMenu: 'infra/codegen/index'
+        //}
+      //}
+    //]
   },
   {
     path: '/job',
@@ -157,21 +157,21 @@ const remainingRouter: AppRouteRecordRaw[] = [
     meta: {
       hidden: true
     },
-    children: [
-      {
-        path: 'job-log',
-        component: () => import('@/views/.archived/infra/job/logger/index.vue'),
-        name: 'InfraJobLog',
-        meta: {
-          noCache: true,
-          hidden: true,
-          canTo: true,
-          icon: 'ep:edit',
-          title: '调度日志',
-          activeMenu: 'infra/job/index'
-        }
-      }
-    ]
+    //children: [
+      //{
+        //path: 'job-log',
+        //component: () => import('@/views/.archived/infra/job/logger/index.vue'),
+        //name: 'InfraJobLog',
+        //meta: {
+          //noCache: true,
+          //hidden: true,
+          //canTo: true,
+          //icon: 'ep:edit',
+          //title: '调度日志',
+          //activeMenu: 'infra/job/index'
+        //}
+      //}
+    //]
   },
   {
     path: '/login',
