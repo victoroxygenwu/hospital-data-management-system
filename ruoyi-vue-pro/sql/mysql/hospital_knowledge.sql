@@ -7,8 +7,6 @@
 SET NAMES utf8mb4;
 
 -- 若你的库名不是 hospital，请修改下一行
-USE hospital;
-
 -- ---------- 1) 疾病字典 ----------
 CREATE TABLE IF NOT EXISTS hospital_disease (
     id               BIGINT          PRIMARY KEY AUTO_INCREMENT COMMENT '疾病ID',

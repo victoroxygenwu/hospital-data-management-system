@@ -49,14 +49,14 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/hospital?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_general_ci&nullCatalogMeansCurrent=true
+          url: jdbc:mysql://127.0.0.1:3306/ruoyi_vue_pro?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_general_ci&nullCatalogMeansCurrent=true
           username: root
-          password: Nmy791113
+          password: 123456
         slave: # 模拟从库，可根据自己需要修改
           lazy: true # 开启懒加载，保证启动速度
-          url: jdbc:mysql://127.0.0.1:3306/hospital?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_general_ci&nullCatalogMeansCurrent=true
+          url: jdbc:mysql://127.0.0.1:3306/ruoyi_vue_pro?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_general_ci&nullCatalogMeansCurrent=true
           username: root
-          password: Nmy791113
+          password: 123456
 #        tdengine: # IoT 数据库（需要 IoT 物联网再开启噢！）
 #          lazy: true # 开启懒加载，保证启动速度
 #          url: jdbc:TAOS-WS://127.0.0.1:6041/ruoyi_vue_pro?varcharAsString=true
@@ -264,3 +264,11 @@ justauth:
     type: REDIS
     prefix: 'social_auth_state:' # 缓存前缀，目前只对 Redis 缓存生效，默认 JUSTAUTH::STATE::
     timeout: 24h # 超时时长，目前只对 Redis 缓存生效，默认 3 分钟
+
+--- #################### AI（DeepSeek）相关配置 ####################
+
+spring:
+  ai:
+    deepseek:
+      # AI 辅助诊断 / 处方审核使用；留空则自动降级为知识图谱离线匹配
+      api-key: sk-c610d660e9b542d7b4146980d5def9d0

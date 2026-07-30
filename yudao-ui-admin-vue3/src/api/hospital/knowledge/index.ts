@@ -11,6 +11,8 @@ export const deleteDiseaseMedicine = (id: number) => request.delete({ url: '/hos
 
 export const getDiseaseNetwork = (id: number) => request.get({ url: '/hospital/knowledge-graph/disease-network?id=' + id })
 
+export const getFullNetwork = () => request.get({ url: '/hospital/knowledge-graph/full-network' })
+
 export const assistDiagnosis = (data: { symptomDescription: string }) =>
   request.post({ url: '/hospital/ai/assist-diagnosis', data })
 

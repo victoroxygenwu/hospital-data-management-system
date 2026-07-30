@@ -16,6 +16,7 @@ import cn.iocoder.yudao.module.hospital.dal.mysql.PrescriptionMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.SymptomMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.VisitMapper;
 import cn.iocoder.yudao.module.hospital.framework.ai.DeepSeekClient;
+import cn.iocoder.yudao.module.hospital.framework.security.HospitalSecurityContext;
 import cn.iocoder.yudao.module.hospital.service.knowledge.dto.DiseaseMatchDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.HOSPITAL_PERMISSION_DENIED;
 import static cn.iocoder.yudao.module.hospital.enums.ErrorCodeConstants.PRESCRIPTION_NOT_EXISTS;
 
 /**
@@ -65,6 +67,8 @@ public class AiServiceImpl implements AiService {
     private DepartmentMapper departmentMapper;
     @Resource
     private SymptomMapper symptomMapper;
+    @Resource
+    private HospitalSecurityContext securityContext;
 
     @Override
     public AssistDiagnosisRespVO assistDiagnosis(String symptomDescription) {
@@ -96,6 +100,14 @@ public class AiServiceImpl implements AiService {
             throw exception(PRESCRIPTION_NOT_EXISTS);
         }
 
+        // 角色权限：医生仅可审核本人开具的处方；管理员（未关联医生/患者档案的后台账号）不受限。
+        // 患者本就不持有 hospital:ai:prescription-review 权限码，会在 @PreAuthorize 层被拦截。
+        Long currentDoctorId = securityContext.getCurrentDoctorId();
+        if (!securityContext.isAdmin() && currentDoctorId != null
+                && !currentDoctorId.equals(prescription.getDoctorId())) {
+            throw exception(HOSPITAL_PERMISSION_DENIED);
+        }
+
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectListByPrescriptionId(prescriptionId);
         Set<Long> medicineIds = items.stream().map(PrescriptionItemDO::getMedicineId).collect(Collectors.toSet());
         List<MedicineDO> medicines = medicineMapper.selectListByMedicineIds(medicineIds);
@@ -109,13 +121,36 @@ public class AiServiceImpl implements AiService {
         Map<String, List<MedicineDO>> standardMapping = knowledgeGraphService.getDiseaseMedicineMapping(diagnosis);
         String reviewPrompt = buildReviewPrompt(medicines, diagnosis, standardMapping);
 
+        // 组装原处方快照，随审核结果一并返回，便于前端展示「审核依据」
+        Map<Long, MedicineDO> medicineMap = medicines.stream()
+                .collect(Collectors.toMap(MedicineDO::getId, m -> m, (a, b) -> a));
+        ReviewResponseVO.PrescriptionSnapshotVO snapshot = new ReviewResponseVO.PrescriptionSnapshotVO();
+        snapshot.setId(prescription.getId());
+        snapshot.setVisitId(prescription.getVisitId());
+        snapshot.setDiagnosis(diagnosis);
+        snapshot.setStatus(prescription.getStatus());
+        snapshot.setCreateTime(prescription.getCreateTime());
+        snapshot.setItems(items.stream().map(it -> {
+            ReviewResponseVO.PrescriptionItemSnapshotVO s = new ReviewResponseVO.PrescriptionItemSnapshotVO();
+            MedicineDO m = medicineMap.get(it.getMedicineId());
+            s.setMedicineName(m != null ? m.getName() : ("药品#" + it.getMedicineId()));
+            s.setSpecification(m != null ? m.getSpecification() : "");
+            s.setQuantity(it.getQuantity());
+            s.setPrice(it.getPrice());
+            s.setInstructions(it.getInstructions());
+            return s;
+        }).collect(Collectors.toList()));
+
         ReviewResponseVO aiResult = callAiReview(reviewPrompt);
         if (aiResult != null) {
             aiResult.setOffline(false);
+            aiResult.setPrescription(snapshot);
             return aiResult;
         }
 
-        return buildOfflineReview(medicines, standardMapping);
+        ReviewResponseVO offline = buildOfflineReview(medicines, standardMapping);
+        offline.setPrescription(snapshot);
+        return offline;
     }
 
     private List<String> extractSymptomsWithAi(String symptomDescription) {

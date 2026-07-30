@@ -35,23 +35,41 @@ const loadData = async () => {
 const renderChart = (list: any[]) => {
   if (!chartRef.value || !list.length) return
   if (!chart) chart = echarts.init(chartRef.value)
-  const maxVisit = Math.max(...list.map(d => d.visitCount), 1)
-  const maxFee = Math.max(...list.map(d => d.avgFee || 0), 1)
+  // 量纲归一化：接诊量/平均费用量纲差异巨大，按各自最大值归一到 0~100，避免雷达被单一轴主导；
+  // tooltip 仍展示真实数值。
+  const top = list.slice(0, 8)
+  const maxVisit = Math.max(...top.map(d => d.visitCount), 1)
+  const maxFee = Math.max(...top.map(d => d.avgFee || 0), 1)
+  const palette = ['#5470c6', '#ee6666', '#fac858', '#91cc75', '#73c0de', '#3ba272', '#fc8452', '#9a60b4']
   chart.setOption({
-    tooltip: {},
-    legend: { data: list.map(d => d.deptName), bottom: 0 },
+    tooltip: {
+      formatter: (p: any) => {
+        const r = p.data.real
+        return `${p.name}<br/>接诊量：${r[0]}<br/>治愈率：${(r[1] * 100).toFixed(1)}%<br/>平均费用：¥${r[2].toFixed(2)}`
+      }
+    },
+    legend: { data: top.map(d => d.deptName), bottom: 0, type: 'scroll' },
     radar: {
       indicator: [
-        { name: '接诊量', max: maxVisit },
-        { name: '治愈率', max: 1 },
-        { name: '平均费用', max: maxFee }
-      ]
+        { name: '接诊量', max: 100 },
+        { name: '治愈率', max: 100 },
+        { name: '平均费用', max: 100 }
+      ],
+      radius: '62%'
     },
     series: [{
       type: 'radar',
-      data: list.map(d => ({
+      data: top.map((d, idx) => ({
         name: d.deptName,
-        value: [d.visitCount, d.cureRate, d.avgFee || 0]
+        value: [
+          Math.round((d.visitCount / maxVisit) * 100),
+          Math.round(d.cureRate * 100),
+          Math.round(((d.avgFee || 0) / maxFee) * 100)
+        ],
+        real: [d.visitCount, d.cureRate, d.avgFee || 0],
+        lineStyle: { color: palette[idx % palette.length], width: 2 },
+        itemStyle: { color: palette[idx % palette.length] },
+        areaStyle: { color: palette[idx % palette.length], opacity: 0.08 }
       }))
     }]
   }, true)

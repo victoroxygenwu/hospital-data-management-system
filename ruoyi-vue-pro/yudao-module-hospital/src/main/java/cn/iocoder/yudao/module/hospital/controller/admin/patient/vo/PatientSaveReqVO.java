@@ -25,12 +25,16 @@ public class PatientSaveReqVO {
     private String phone;
     @Schema(description = "家庭住址")
     private String address;
+    @Schema(description = "所属地区（省级行政区）")
+    private String region;
     @Schema(description = "紧急联系人姓名")
     private String emergencyContact;
     @Schema(description = "紧急联系人电话")
     private String emergencyPhone;
     @Schema(description = "医保卡号")
     private String insuranceNo;
+    @Schema(description = "医保类型")
+    private String insuranceType;
     @Schema(description = "既往病史")
     private String medicalHistory;
     @Schema(description = "最近入院时间")

@@ -18,6 +18,28 @@
 
     <el-skeleton v-if="loading" animated class="mt-20px" :rows="4" />
 
+    <el-card v-if="result && !loading && result.prescription" class="mt-20px">
+      <template #header><span>原处方（审核对象）</span></template>
+      <el-descriptions :column="3" border size="small">
+        <el-descriptions-item label="处方ID">#{{ result.prescription.id }}</el-descriptions-item>
+        <el-descriptions-item label="关联就诊">#{{ result.prescription.visitId }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="result.prescription.status === 1 ? 'success' : 'info'">
+            {{ result.prescription.status === 1 ? '已发药' : '待发药' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="临床诊断">{{ result.prescription.diagnosis || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="开具时间">{{ formatTime(result.prescription.createTime) }}</el-descriptions-item>
+      </el-descriptions>
+      <el-table :data="result.prescription.items || []" border stripe class="mt-15px">
+        <el-table-column label="药品名称" prop="medicineName" min-width="140" />
+        <el-table-column label="规格" prop="specification" min-width="100" />
+        <el-table-column label="数量" prop="quantity" width="80" />
+        <el-table-column label="单价(元)" prop="price" width="100" />
+        <el-table-column label="用法用量" prop="instructions" min-width="200" />
+      </el-table>
+    </el-card>
+
     <el-card v-if="result && !loading" class="mt-20px">
       <template #header>
         <span>审核报告</span>
@@ -57,6 +79,8 @@ const riskTagType = (level: string) => {
   if (level === 'MEDIUM') return 'warning'
   return 'success'
 }
+
+const formatTime = (t: any) => (t ? String(t).replace('T', ' ') : '-')
 
 const handleReview = async () => {
   if (!prescriptionId.value) {

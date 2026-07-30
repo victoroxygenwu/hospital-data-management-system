@@ -34,4 +34,11 @@ public class KnowledgeGraphController {
         return success(knowledgeGraphService.getDiseaseNetwork(id));
     }
 
+    @GetMapping("/full-network")
+    @Operation(summary = "获取全量知识图谱（所有疾病/症状/药品及关联）")
+    @PreAuthorize("@ss.hasPermission('hospital:knowledge-graph:query')")
+    public CommonResult<DiseaseNetworkRespVO> getFullNetwork() {
+        return success(knowledgeGraphService.getFullNetwork());
+    }
+
 }

@@ -11,6 +11,7 @@
         <el-card>
           <template #header><span>医保占比</span></template>
           <div ref="insuranceChartRef" style="width:100%;height:400px;"></div>
+          <div v-if="insuranceDesc" class="text-13px text-gray-500 mt-8px">{{ insuranceDesc }}</div>
         </el-card>
       </el-col>
       <el-col :span="24" class="mt-20px">
@@ -34,6 +35,7 @@ const loading = ref(false)
 const ageChartRef = ref<HTMLElement>()
 const insuranceChartRef = ref<HTMLElement>()
 const regionChartRef = ref<HTMLElement>()
+const insuranceDesc = ref('')
 let ageChart: echarts.ECharts | null = null
 let insuranceChart: echarts.ECharts | null = null
 let regionChart: echarts.ECharts | null = null
@@ -80,11 +82,20 @@ const renderAgeChart = (list: any[]) => {
 const renderInsuranceChart = (list: any[]) => {
   if (!insuranceChartRef.value) return
   if (!insuranceChart) insuranceChart = echarts.init(insuranceChartRef.value)
+  const total = list.reduce((s, d) => s + (d.count || 0), 0)
+  let topName = '-'
+  let topCount = 0
+  list.forEach(d => { if (d.count > topCount) { topCount = d.count; topName = d.insuranceType } })
+  insuranceDesc.value = total > 0
+    ? `共 ${total} 名患者参保情况：${topName} 占比最高（${((topCount / total) * 100).toFixed(1)}%），其次为居民医保、新农合、自费与商业保险。`
+    : '暂无参保数据'
   insuranceChart.setOption({
-    tooltip: { trigger: 'item' },
+    tooltip: { trigger: 'item', formatter: '{b}: {c} 人 ({d}%)' },
+    legend: { bottom: '0%' },
     series: [{
-      type: 'pie', radius: '60%',
-      data: list.map(d => ({ name: d.hasInsurance ? '有医保' : '无医保', value: d.count }))
+      type: 'pie', radius: ['40%', '65%'],
+      label: { formatter: '{b}\n{d}%' },
+      data: list.map(d => ({ name: d.insuranceType, value: d.count }))
     }]
   }, true)
 }

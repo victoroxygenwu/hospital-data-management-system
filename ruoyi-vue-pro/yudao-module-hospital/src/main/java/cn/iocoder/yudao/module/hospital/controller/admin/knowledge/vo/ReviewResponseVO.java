@@ -18,6 +18,9 @@ public class ReviewResponseVO {
     @Schema(description = "是否离线降级（AI 不可用时为 true）")
     private Boolean offline;
 
+    @Schema(description = "被审核的原始处方快照（便于查看审核依据）")
+    private PrescriptionSnapshotVO prescription;
+
     @Schema(description = "药品相互作用")
     @Data
     public static class InteractionVO {
@@ -27,6 +30,38 @@ public class ReviewResponseVO {
         private String medicineB;
         @Schema(description = "说明")
         private String note;
+    }
+
+    @Schema(description = "原处方快照（审核对象）")
+    @Data
+    public static class PrescriptionSnapshotVO {
+        @Schema(description = "处方ID")
+        private Long id;
+        @Schema(description = "关联就诊ID")
+        private Long visitId;
+        @Schema(description = "临床诊断")
+        private String diagnosis;
+        @Schema(description = "处方状态：0待发药 / 1已发药")
+        private Integer status;
+        @Schema(description = "开具时间")
+        private java.time.LocalDateTime createTime;
+        @Schema(description = "处方明细")
+        private List<PrescriptionItemSnapshotVO> items;
+    }
+
+    @Schema(description = "原处方明细快照")
+    @Data
+    public static class PrescriptionItemSnapshotVO {
+        @Schema(description = "药品名称")
+        private String medicineName;
+        @Schema(description = "规格")
+        private String specification;
+        @Schema(description = "数量")
+        private Integer quantity;
+        @Schema(description = "单价（元）")
+        private java.math.BigDecimal price;
+        @Schema(description = "用法用量")
+        private String instructions;
     }
 
 }

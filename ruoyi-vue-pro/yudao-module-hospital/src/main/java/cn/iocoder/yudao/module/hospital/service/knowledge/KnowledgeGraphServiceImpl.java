@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.hospital.service.knowledge;
 import cn.iocoder.yudao.module.hospital.controller.admin.knowledge.vo.DiseaseNetworkRespVO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DiseaseDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.DiseaseMedicineDO;
+import cn.iocoder.yudao.module.hospital.dal.dataobject.DiseaseSymptomDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.MedicineDO;
 import cn.iocoder.yudao.module.hospital.dal.dataobject.SymptomDO;
 import cn.iocoder.yudao.module.hospital.dal.mysql.DiseaseMapper;
@@ -12,6 +13,7 @@ import cn.iocoder.yudao.module.hospital.dal.mysql.MedicineMapper;
 import cn.iocoder.yudao.module.hospital.dal.mysql.SymptomMapper;
 import cn.iocoder.yudao.module.hospital.service.knowledge.dto.DiseaseMatchDTO;
 import cn.iocoder.yudao.module.hospital.service.knowledge.dto.NetworkEdgeDTO;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -112,6 +114,82 @@ public class KnowledgeGraphServiceImpl implements KnowledgeGraphService {
             link.setTarget(medicineNodeId);
             link.setLabel(USAGE_TYPE_LABELS.getOrDefault(edge.getEdgeValue(), "关联"));
             links.add(link);
+        }
+
+        resp.setNodes(nodes);
+        resp.setLinks(links);
+        return resp;
+    }
+
+    @Override
+    public DiseaseNetworkRespVO getFullNetwork() {
+        DiseaseNetworkRespVO resp = new DiseaseNetworkRespVO();
+        List<DiseaseNetworkRespVO.Node> nodes = new ArrayList<>();
+        List<DiseaseNetworkRespVO.Link> links = new ArrayList<>();
+
+        // 疾病节点
+        List<DiseaseDO> diseases = diseaseMapper.selectList(new LambdaQueryWrapperX<>());
+        // 症状节点
+        List<SymptomDO> symptoms = symptomMapper.selectList(new LambdaQueryWrapperX<>());
+        // 药品节点：仅图谱中实际出现者
+        List<DiseaseMedicineDO> dmAll = diseaseMedicineMapper.selectList(new LambdaQueryWrapperX<>());
+        Set<Long> medIds = dmAll.stream().map(DiseaseMedicineDO::getMedicineId).collect(Collectors.toSet());
+        List<MedicineDO> medicines = medIds.isEmpty()
+                ? Collections.emptyList()
+                : medicineMapper.selectListByMedicineIds(medIds);
+
+        for (DiseaseDO d : diseases) {
+            DiseaseNetworkRespVO.Node n = new DiseaseNetworkRespVO.Node();
+            n.setId(d.getId());
+            n.setName(d.getName());
+            n.setCategory(0);
+            nodes.add(n);
+        }
+        Map<Long, Long> symptomNodeId = new HashMap<>();
+        for (SymptomDO s : symptoms) {
+            long sid = encodeSymptomNodeId(s.getId());
+            DiseaseNetworkRespVO.Node n = new DiseaseNetworkRespVO.Node();
+            n.setId(sid);
+            n.setName(s.getName());
+            n.setCategory(1);
+            nodes.add(n);
+            symptomNodeId.put(s.getId(), sid);
+        }
+        Map<Long, Long> medicineNodeId = new HashMap<>();
+        for (MedicineDO m : medicines) {
+            long mid = encodeMedicineNodeId(m.getId());
+            DiseaseNetworkRespVO.Node n = new DiseaseNetworkRespVO.Node();
+            n.setId(mid);
+            n.setName(m.getName());
+            n.setCategory(2);
+            nodes.add(n);
+            medicineNodeId.put(m.getId(), mid);
+        }
+
+        // 边：疾病-症状
+        List<DiseaseSymptomDO> dsAll = diseaseSymptomMapper.selectList(new LambdaQueryWrapperX<>());
+        for (DiseaseSymptomDO e : dsAll) {
+            Long target = symptomNodeId.get(e.getSymptomId());
+            if (target == null) {
+                continue;
+            }
+            DiseaseNetworkRespVO.Link l = new DiseaseNetworkRespVO.Link();
+            l.setSource(e.getDiseaseId());
+            l.setTarget(target);
+            l.setLabel(STRENGTH_LABELS.getOrDefault(e.getStrength(), "关联"));
+            links.add(l);
+        }
+        // 边：疾病-药品
+        for (DiseaseMedicineDO e : dmAll) {
+            Long target = medicineNodeId.get(e.getMedicineId());
+            if (target == null) {
+                continue;
+            }
+            DiseaseNetworkRespVO.Link l = new DiseaseNetworkRespVO.Link();
+            l.setSource(e.getDiseaseId());
+            l.setTarget(target);
+            l.setLabel(USAGE_TYPE_LABELS.getOrDefault(e.getUsageType(), "关联"));
+            links.add(l);
         }
 
         resp.setNodes(nodes);

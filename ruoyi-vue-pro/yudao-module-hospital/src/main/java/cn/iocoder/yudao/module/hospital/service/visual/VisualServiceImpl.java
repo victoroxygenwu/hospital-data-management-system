@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class VisualServiceImpl implements VisualService {
 
-    private static final String ALL_DIAGNOSIS = "ALL";
+    private static final int DISEASE_TOP_N = 8;
     private static final int MIN_CO_OCCURRENCE = 2;
     private static final int REGION_TOP_N = 10;
 
@@ -44,7 +44,7 @@ public class VisualServiceImpl implements VisualService {
 
     @Override
     public List<HeatmapVO> getHeatmapData() {
-        if (!securityContext.isAdmin()) {
+        if (!canViewVisual()) {
             return Collections.emptyList();
         }
         Map<Long, String> deptNameMap = buildDeptNameMap();
@@ -68,7 +68,7 @@ public class VisualServiceImpl implements VisualService {
 
     @Override
     public List<DeptRadarVO> getDeptRadarData() {
-        if (!securityContext.isAdmin()) {
+        if (!canViewVisual()) {
             return Collections.emptyList();
         }
         Map<Long, String> deptNameMap = buildDeptNameMap();
@@ -112,7 +112,7 @@ public class VisualServiceImpl implements VisualService {
 
     @Override
     public PatientProfileRespVO getPatientProfile() {
-        if (!securityContext.isAdmin()) {
+        if (!canViewVisual()) {
             return PatientProfileRespVO.builder()
                     .ageList(Collections.emptyList())
                     .regionList(Collections.emptyList())
@@ -129,26 +129,42 @@ public class VisualServiceImpl implements VisualService {
 
     @Override
     public List<DiseaseSeasonalVO> getDiseaseSeasonal() {
-        if (!securityContext.isAdmin()) {
+        if (!canViewVisual()) {
             return Collections.emptyList();
         }
         List<VisitDO> visits = visitMapper.selectList(new LambdaQueryWrapperX<>());
-        Map<Integer, Long> byMonth = visits.stream()
-                .filter(v -> v.getVisitDate() != null)
-                .collect(Collectors.groupingBy(v -> v.getVisitDate().getMonthValue(), Collectors.counting()));
-        return byMonth.entrySet().stream()
-                .map(e -> DiseaseSeasonalVO.builder()
-                        .month(e.getKey())
-                        .diagnosis(ALL_DIAGNOSIS)
-                        .count(e.getValue())
-                        .build())
-                .sorted(Comparator.comparing(DiseaseSeasonalVO::getMonth))
+        if (visits.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 先按总就诊量取 TOP-N 病种，再按月拆解成多条 series（前端按 diagnosis 分线）
+        Map<String, Long> diseaseTotal = visits.stream()
+                .filter(v -> StringUtils.hasText(v.getDiagnosis()))
+                .collect(Collectors.groupingBy(VisitDO::getDiagnosis, Collectors.counting()));
+        List<String> topDiseases = diseaseTotal.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(DISEASE_TOP_N)
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
+        Map<String, Map<Integer, Long>> grouped = visits.stream()
+                .filter(v -> StringUtils.hasText(v.getDiagnosis()) && v.getVisitDate() != null
+                        && topDiseases.contains(v.getDiagnosis()))
+                .collect(Collectors.groupingBy(VisitDO::getDiagnosis,
+                        Collectors.groupingBy(v -> v.getVisitDate().getMonthValue(), Collectors.counting())));
+        List<DiseaseSeasonalVO> result = new ArrayList<>();
+        grouped.forEach((disease, monthMap) -> monthMap.forEach((month, count) ->
+                result.add(DiseaseSeasonalVO.builder()
+                        .month(month)
+                        .diagnosis(disease)
+                        .count(count)
+                        .build())));
+        result.sort(Comparator.comparing(DiseaseSeasonalVO::getDiagnosis)
+                .thenComparing(DiseaseSeasonalVO::getMonth));
+        return result;
     }
 
     @Override
     public List<MedicineCooccurrenceVO> getMedicineCooccurrence() {
-        if (!securityContext.isAdmin()) {
+        if (!canViewVisual()) {
             return Collections.emptyList();
         }
         List<PrescriptionItemDO> items = prescriptionItemMapper.selectList(new LambdaQueryWrapperX<>());
@@ -189,6 +205,12 @@ public class VisualServiceImpl implements VisualService {
         return result;
     }
 
+    private boolean canViewVisual() {
+        // 数据看板面向管理员与医生：管理员（未关联医生/患者档案）与医生（关联医生档案）均可查看，
+        // 患者未授予 hospital:visual:query 权限码，菜单层即不可见，这里作为数据级兜底。
+        return securityContext.isAdmin() || securityContext.getCurrentDoctorId() != null;
+    }
+
     private Map<Long, String> buildDeptNameMap() {
         return departmentMapper.selectList(new LambdaQueryWrapperX<>()).stream()
                 .collect(Collectors.toMap(DepartmentDO::getId, DepartmentDO::getDeptName, (a, b) -> a));
@@ -218,13 +240,11 @@ public class VisualServiceImpl implements VisualService {
     private List<PatientRegionVO> buildRegionList(List<PatientDO> patients) {
         Map<String, Long> counter = new HashMap<>();
         for (PatientDO patient : patients) {
-            if (!StringUtils.hasText(patient.getAddress())) {
+            // 直接按省级行政区聚合（patient.region 由生成器统一写入，如「北京市」「河北省」）
+            if (!StringUtils.hasText(patient.getRegion())) {
                 continue;
             }
-            String region = patient.getAddress().trim();
-            if (region.length() > 2) {
-                region = region.substring(0, 2);
-            }
+            String region = patient.getRegion().trim();
             counter.merge(region, 1L, Long::sum);
         }
         return counter.entrySet().stream()
@@ -235,17 +255,22 @@ public class VisualServiceImpl implements VisualService {
     }
 
     private List<PatientInsuranceVO> buildInsuranceList(List<PatientDO> patients) {
-        long withInsurance = patients.stream()
-                .filter(p -> StringUtils.hasText(p.getInsuranceNo()))
-                .count();
-        long withoutInsurance = patients.size() - withInsurance;
+        // 按医保类型分组统计：职工医保 / 居民医保 / 新农合 / 商业保险 / 自费 / 未知
+        Map<String, Long> counter = new LinkedHashMap<>();
+        String[] order = {"职工医保", "居民医保", "新农合", "商业保险", "自费", "未知"};
+        for (String t : order) {
+            counter.put(t, 0L);
+        }
+        for (PatientDO patient : patients) {
+            String t = StringUtils.hasText(patient.getInsuranceType()) ? patient.getInsuranceType() : "未知";
+            counter.merge(t, 1L, Long::sum);
+        }
         List<PatientInsuranceVO> result = new ArrayList<>();
-        if (withInsurance > 0) {
-            result.add(PatientInsuranceVO.builder().hasInsurance(true).count(withInsurance).build());
-        }
-        if (withoutInsurance > 0) {
-            result.add(PatientInsuranceVO.builder().hasInsurance(false).count(withoutInsurance).build());
-        }
+        counter.forEach((t, c) -> {
+            if (c > 0) {
+                result.add(PatientInsuranceVO.builder().insuranceType(t).count(c).build());
+            }
+        });
         return result;
     }
 

@@ -31,9 +31,13 @@ public class PatientDO extends BaseDO {
     private String idCard;
     private String phone;
     private String address;
+    /** 所属地区（省级行政区，用于患者画像地区分布聚合） */
+    private String region;
     private String emergencyContact;
     private String emergencyPhone;
     private String insuranceNo;
+    /** 医保类型：职工医保 / 居民医保 / 新农合 / 商业保险 / 自费 */
+    private String insuranceType;
     private String medicalHistory;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate admissionDate;
