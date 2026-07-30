@@ -170,6 +170,98 @@ const hospitalRoutes = {
         noCache: false,
         roles: ['admin']
       }
+    },
+    // ========== 模块一：知识图谱 (管理员) ==========
+    {
+      path: 'knowledge',
+      name: 'HospitalKnowledge',
+      meta: {
+        title: '知识图谱',
+        icon: 'ep:connection',
+        alwaysShow: true,
+        roles: ['admin']
+      },
+      children: [
+        {
+          path: 'disease',
+          component: () => import('@/views/hospital/disease/index.vue'),
+          name: 'HospitalDisease',
+          meta: { title: '疾病字典', icon: 'ep:first-aid-kit', roles: ['admin'] }
+        },
+        {
+          path: 'symptom',
+          component: () => import('@/views/hospital/symptom/index.vue'),
+          name: 'HospitalSymptom',
+          meta: { title: '症状字典', icon: 'ep:warning', roles: ['admin'] }
+        },
+        {
+          path: 'kg-relations',
+          component: () => import('@/views/hospital/kg-relations/index.vue'),
+          name: 'HospitalKgRelations',
+          meta: { title: '关联管理', icon: 'ep:share', roles: ['admin'] }
+        },
+        {
+          path: 'knowledge-graph',
+          component: () => import('@/views/hospital/knowledge-graph/index.vue'),
+          name: 'HospitalKnowledgeGraph',
+          meta: { title: '图谱可视化', icon: 'ep:data-line', roles: ['admin'] }
+        },
+        {
+          path: 'ai-assist-diagnosis',
+          component: () => import('@/views/hospital/ai-assist-diagnosis/index.vue'),
+          name: 'HospitalAiAssistDiagnosis',
+          meta: { title: 'AI 辅助诊断', icon: 'ep:magic-stick', roles: ['admin'] }
+        },
+        {
+          path: 'ai-review',
+          component: () => import('@/views/hospital/ai-review/index.vue'),
+          name: 'HospitalAiReview',
+          meta: { title: 'AI 处方审核', icon: 'ep:document-checked', roles: ['admin'] }
+        }
+      ]
+    },
+    // ========== 模块二：数据看板 (管理员) ==========
+    {
+      path: 'hospital-visual',
+      name: 'HospitalVisual',
+      meta: {
+        title: '数据看板',
+        icon: 'ep:data-line',
+        alwaysShow: true,
+        roles: ['admin']
+      },
+      children: [
+        {
+          path: 'heatmap',
+          component: () => import('@/views/hospital/visual/heatmap/index.vue'),
+          name: 'HospitalVisualHeatmap',
+          meta: { title: '接诊热力图', icon: 'ep:calendar', roles: ['admin'] }
+        },
+        {
+          path: 'dept-radar',
+          component: () => import('@/views/hospital/visual/dept-radar/index.vue'),
+          name: 'HospitalVisualDeptRadar',
+          meta: { title: '科室雷达图', icon: 'ep:pie-chart', roles: ['admin'] }
+        },
+        {
+          path: 'patient-profile',
+          component: () => import('@/views/hospital/visual/patient-profile/index.vue'),
+          name: 'HospitalVisualPatientProfile',
+          meta: { title: '患者画像', icon: 'ep:user', roles: ['admin'] }
+        },
+        {
+          path: 'disease-seasonal',
+          component: () => import('@/views/hospital/visual/disease-seasonal/index.vue'),
+          name: 'HospitalVisualDiseaseSeasonal',
+          meta: { title: '疾病趋势', icon: 'ep:trend-charts', roles: ['admin'] }
+        },
+        {
+          path: 'medicine-cooccurrence',
+          component: () => import('@/views/hospital/visual/medicine-cooccurrence/index.vue'),
+          name: 'HospitalVisualMedicineCooccurrence',
+          meta: { title: '药品关联', icon: 'ep:connection', roles: ['admin'] }
+        }
+      ]
     }
   ]
 }
