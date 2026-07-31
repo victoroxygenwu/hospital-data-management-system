@@ -96,7 +96,7 @@ VALUES
 -- ============ 数据统计 ============
 INSERT INTO system_menu (id, name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted)
 VALUES 
-(5190, '数据统计', 'hospital:stats:query', 2, 10, 5100, 'stats', 'ep:data-analysis', 'hospital/stats/index', NULL, 0, 1, 1, 1, '1', NOW(), '1', NOW(), 0),
+(5190, '数据统计', 'hospital:stats:query', 2, 6, 7100, 'stats', 'ep:data-analysis', 'hospital/stats/index', NULL, 0, 1, 1, 1, '1', NOW(), '1', NOW(), 0),
 (5191, '统计查询', 'hospital:stats:query', 3, 1, 5190, '', NULL, NULL, NULL, 0, 1, 1, 1, '1', NOW(), '1', NOW(), 0);
 
 -- ============ 模块一：AI 增强医疗知识图谱菜单（id 7000-7024，挂在医院管理 5100 下）============
